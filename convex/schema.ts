@@ -31,9 +31,9 @@ export default defineSchema({
   films: defineTable({
     tmdbId: v.number(),
     title: v.string(),
-    year: v.number(),
-    runtime: v.number(),
-    director: v.string(),
+    year: v.union(v.number(), v.null()),
+    runtime: v.union(v.number(), v.null()),
+    director: v.union(v.string(), v.null()),
     posterPath: v.union(v.string(), v.null()),
   }).index("by_tmdbId", ["tmdbId"]),
 

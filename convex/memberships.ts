@@ -1,4 +1,6 @@
+import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import { internalQuery } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireUserId } from "./authentication";
 
@@ -34,3 +36,8 @@ export async function requireMemberId(
   }
   return userId;
 }
+
+export const currentMemberId = internalQuery({
+  args: { groupId: v.id("groups") },
+  handler: (ctx, args): Promise<Id<"users">> => requireMemberId(ctx, args.groupId),
+});
