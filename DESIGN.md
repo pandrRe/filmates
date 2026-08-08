@@ -146,7 +146,7 @@ films        { tmdbId, title, year, runtime,
 groupFilms   { groupId, filmId, postedBy, postedAt,
                score }                              // index: by_group_score, unique (groupId, filmId)
 votes        { groupFilmId, userId, value: 1 | -1 } // index: by_groupFilm, unique (groupFilmId, userId)
-watches      { groupFilmId, userId }                // index: by_groupFilm, unique (groupFilmId, userId)
+seenMarks    { groupFilmId, userId }                // index: by_groupFilm, unique (groupFilmId, userId)
 ```
 
 `groupFilms.score` is denormalized. The vote mutation updates the vote row and the score in the same transaction. The main view is then one indexed range read (`by_group_score`), not an aggregation.
