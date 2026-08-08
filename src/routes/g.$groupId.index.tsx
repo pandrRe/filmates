@@ -1,5 +1,6 @@
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "octane";
+import * as valibot from "valibot";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { GroupFilm } from "../../convex/films";
@@ -10,9 +11,26 @@ import { convexClient } from "../convex/client";
 import { useLiveQuery } from "../convex/useLiveQuery";
 import { describeError } from "../describeError";
 import { FilmPoster } from "../films/FilmPoster";
+import { matchesQuery } from "../films/fuzzy";
 import { filmSpecification } from "../films/specification";
 
+const FilmFilter = valibot.picklist(["all", "unseenByMe", "seenByAll"]);
+
+type Filter = valibot.InferOutput<typeof FilmFilter>;
+
+const FILTERS: Array<{ value: Filter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "unseenByMe", label: "Unseen by me" },
+  { value: "seenByAll", label: "Seen by all" },
+];
+
+const GroupSearch = valibot.object({
+  filter: valibot.optional(FilmFilter, "all"),
+  query: valibot.optional(valibot.pipe(valibot.string(), valibot.maxLength(80)), ""),
+});
+
 export const Route = createFileRoute("/g/$groupId/")({
+  validateSearch: GroupSearch,
   beforeLoad: ({ params }) => {
     if (readSession().status === "signedOut") {
       throw redirect({ to: "/sign-in", search: { next: `/g/${params.groupId}` } });
@@ -23,25 +41,68 @@ export const Route = createFileRoute("/g/$groupId/")({
 
 function GroupPage() {
   const { groupId } = Route.useParams();
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const group = useLiveQuery(api.groups.get, { groupId });
 
   return (
     <main class="page">
       <header class="page-head">
-        <Link class="label" to="/">
-          Groups
+        <Link class="wordmark" to="/">
+          Filmates
         </Link>
-        <Link class="label" to="/g/$groupId/add" params={{ groupId }}>
-          Add film
-        </Link>
+        <input
+          class="search"
+          type="search"
+          value={search.query}
+          placeholder="Search"
+          aria-label="Search films"
+          autoComplete="off"
+          maxLength={80}
+          onInput={(event) => {
+            const query = event.currentTarget.value;
+            void navigate({ search: (previous) => ({ ...previous, query }), replace: true });
+          }}
+        />
       </header>
 
       {group.status === "loading" && <p class="muted">Loading</p>}
       {group.status === "failed" && <p class="failure">{group.message}</p>}
       {group.status === "ready" && (
         <>
-          <h1 class="wordmark">{group.value.name}</h1>
-          <FilmList groupId={groupId} members={group.value.members} />
+          <div class="page-head">
+            <h1 class="title">{group.value.name}</h1>
+            <Link class="label" to="/g/$groupId/add" params={{ groupId }} search={{ title: "" }}>
+              Add film
+            </Link>
+          </div>
+
+          <nav class="filters">
+            {FILTERS.map((filter) => (
+              <button
+                class={filter.value === search.filter ? "label filter-active" : "label"}
+                key={filter.value}
+                type="button"
+                aria-pressed={filter.value === search.filter}
+                onClick={() => {
+                  void navigate({
+                    search: (previous) => ({ ...previous, filter: filter.value }),
+                    replace: true,
+                  });
+                }}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </nav>
+
+          <FilmList
+            groupId={groupId}
+            members={group.value.members}
+            filter={search.filter}
+            query={search.query}
+          />
+
           <section class="panel">
             <p class="label">
               Members {group.value.memberCount} / {group.value.memberLimit}
@@ -62,7 +123,22 @@ function GroupPage() {
   );
 }
 
-function FilmList(props: { groupId: string; members: Array<Member> }) {
+function keeps(groupFilm: GroupFilm, filter: Filter, memberCount: number): boolean {
+  if (filter === "unseenByMe") {
+    return !groupFilm.mySeen;
+  }
+  if (filter === "seenByAll") {
+    return groupFilm.seenBy.length === memberCount;
+  }
+  return true;
+}
+
+function FilmList(props: {
+  groupId: string;
+  members: Array<Member>;
+  filter: Filter;
+  query: string;
+}) {
   const films = useLiveQuery(api.films.listForGroup, { groupId: props.groupId });
 
   if (films.status === "loading") {
@@ -75,17 +151,38 @@ function FilmList(props: { groupId: string; members: Array<Member> }) {
     return <p class="muted">No films yet. Add the first.</p>;
   }
 
+  const ranked = films.value
+    .map((groupFilm, index) => ({ groupFilm, rank: index + 1 }))
+    .filter(
+      (entry) =>
+        keeps(entry.groupFilm, props.filter, props.members.length) &&
+        matchesQuery(entry.groupFilm.film.title, props.query),
+    );
+
   return (
-    <ol class="rows">
-      {films.value.map((groupFilm, index) => (
-        <FilmRow
-          key={groupFilm.id}
-          groupFilm={groupFilm}
-          rank={index + 1}
-          members={props.members}
-        />
-      ))}
-    </ol>
+    <>
+      {ranked.length === 0 && <p class="muted">Nothing matches.</p>}
+      <ol class="rows">
+        {ranked.map((entry) => (
+          <FilmRow
+            key={entry.groupFilm.id}
+            groupFilm={entry.groupFilm}
+            rank={entry.rank}
+            members={props.members}
+          />
+        ))}
+      </ol>
+      {props.query.trim().length > 0 && (
+        <Link
+          class="action"
+          to="/g/$groupId/add"
+          params={{ groupId: props.groupId }}
+          search={{ title: props.query }}
+        >
+          Search the film database →
+        </Link>
+      )}
+    </>
   );
 }
 

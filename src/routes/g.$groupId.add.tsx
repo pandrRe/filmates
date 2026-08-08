@@ -1,5 +1,6 @@
 import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "octane";
+import * as valibot from "valibot";
 import { api } from "../../convex/_generated/api";
 import type { FilmSearchResult } from "../../convex/tmdb";
 import { readSession } from "../authentication/session";
@@ -15,7 +16,12 @@ type Search =
   | { status: "failed"; message: string }
   | { status: "ready"; results: Array<FilmSearchResult> };
 
+const AddFilmSearch = valibot.object({
+  title: valibot.optional(valibot.pipe(valibot.string(), valibot.maxLength(80)), ""),
+});
+
 export const Route = createFileRoute("/g/$groupId/add")({
+  validateSearch: AddFilmSearch,
   beforeLoad: ({ params }) => {
     if (readSession().status === "signedOut") {
       throw redirect({ to: "/sign-in", search: { next: `/g/${params.groupId}/add` } });
@@ -68,7 +74,7 @@ function useSearch(query: string): Search {
 function AddFilmPage() {
   const { groupId } = Route.useParams();
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(Route.useSearch().title);
   const search = useSearch(useDebounced(title));
   const [notice, setNotice] = useState<string | null>(null);
   const [pendingTmdbId, setPendingTmdbId] = useState<number | null>(null);

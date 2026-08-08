@@ -98,7 +98,8 @@ Phone / browser
 
 - **Framework: [Octane](https://octanejs.dev)** — React's programming model, compiled. No virtual DOM. The compiler tracks dependencies, so there are no dependency arrays and no rules of hooks. It benchmarks ~2.6× faster than React 19 with Compiler. This serves the "very fast" goal directly.
 - **Routing: [`@octanejs/tanstack-router`](https://github.com/octanejs/octane/tree/main/packages/tanstack-router)** — the official Octane binding for TanStack Router. It has near-full API parity (loaders, search params, `Link` preloading, code splitting via `lazyRouteComponent`). We use file-based routes.
-- Routes: `/sign-in`, `/` (group list → redirect to last group), `/g/$groupId` (main view), `/g/$groupId/add`, `/join/$token`, `/settings`. Every route behind the account redirects to `/sign-in` with the intended path in a `next` search param, so an invite link survives the sign-in detour.
+- Routes: `/sign-in`, `/` (group list), `/g/$groupId` (main view), `/g/$groupId/add`, `/join/$token`, `/settings`. Every route behind the account redirects to `/sign-in` with the intended path in a `next` search param, so an invite link survives the sign-in detour.
+- `/` is the group switcher. The wordmark on the main view links to it. A dropdown switcher in the header costs 49 kB gzip of popover machinery and saves no taps, so there is none.
 - Filter and search state live in the URL as validated search params. A shared link reproduces the exact view.
 - PWA: manifest + service worker for install and instant repeat loads. App shell is cached; data is never cached stale — live queries own the data.
 - Risk note: Octane is new (production-ready for web, but a young ecosystem). There is no escape hatch: `octane/react` mounts Octane islands inside a React app, which is the opposite direction. A React-only library cannot run here, so every React dependency must have an Octane port or a framework-agnostic core we bind ourselves.
