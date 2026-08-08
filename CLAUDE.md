@@ -35,6 +35,12 @@ One concept, one word — in types, tables, functions, UI copy, and docs.
 - **vote** — up or down. **score** = upvotes − downvotes, denormalized on the groupFilm.
 - **seen** — the per-member mark, stored in `seenMarks`. Never "watched".
 
+## Tooling
+
+- **pnpm** is the only package manager. Never npm, yarn, or bun. Commit `pnpm-lock.yaml`; a `package-lock.json` or `yarn.lock` appearing is a bug.
+- **Latest stable everything.** When adding a dependency, install the latest stable version; do not copy versions from old examples. When a task touches an outdated dependency, flag it.
+- **TypeScript 7** (native compiler, GA July 2026) for typechecking and builds. Known gap until 7.1: tools that need the programmatic API (typescript-eslint, ts-morph) still require a side-by-side TS 6.x — pin it explicitly if one is added, and remove the pin when 7.1 lands.
+
 ## Rules
 
 - Commit frequently with the `/commit` skill: one coherent change per commit, after every working unit — not one big commit at the end.

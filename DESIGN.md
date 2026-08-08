@@ -147,6 +147,13 @@ Validation follows **parse, don't validate**. Raw data never crosses a boundary;
 
 Valibot over TypeBox: TanStack Router validates search params through Standard Schema, which Valibot implements natively; and Valibot is modular, so only the schemas used are bundled — this matters for the 80 kB budget. A failed parse throws; there are no silent fallbacks or default-filled records.
 
+### Tooling
+
+- **pnpm** for package management. One lockfile, strict node_modules.
+- **TypeScript 7** (native compiler, GA July 2026) in strict mode — 8–12× faster builds than 6.x. Until 7.1 ships the programmatic API, any tool that needs it (typescript-eslint) pins a side-by-side TS 6.x.
+- **Vite** for dev server and production build, with the Octane compiler plugin.
+- Policy: dependencies stay on latest stable. Few dependencies is the first rule; latest versions of the few is the second.
+
 ## Data model
 
 Convex tables. All lookups go through indexes.
