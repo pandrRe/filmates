@@ -132,6 +132,21 @@ Two different problems, two different tools:
 
 Semantic search is deferred, see [Future work](#future-work). For v1, fuzzy is enough: users search by title, not by vibe.
 
+### Type safety and validation
+
+The architecture is type-safe, data-oriented, and functional. Data is plain serializable objects. Logic is pure functions over that data. Side effects sit only at the edges: Convex functions and the DOM.
+
+Validation follows **parse, don't validate**. Raw data never crosses a boundary; each boundary parses input into a domain type once, and everything inside trusts the types.
+
+| Boundary | Validator |
+|---|---|
+| Database schema, mutation/query args | Convex `v` (required by Convex, generates types) |
+| TMDB responses (inside actions) | **Valibot** schema → domain `Film` type |
+| Route search params (filters, `?film=`) | Valibot via TanStack Router's Standard Schema support |
+| Invite tokens, env vars | Valibot at startup / entry |
+
+Valibot over TypeBox: TanStack Router validates search params through Standard Schema, which Valibot implements natively; and Valibot is modular, so only the schemas used are bundled — this matters for the 80 kB budget. A failed parse throws; there are no silent fallbacks or default-filled records.
+
 ## Data model
 
 Convex tables. All lookups go through indexes.
@@ -264,6 +279,7 @@ How we stay inside it: Octane's compiled output (no VDOM, no framework runtime c
 - **React instead of Octane.** Safe and boring, but slower runtime and the stated goal is speed. Octane keeps React's model, has the TanStack Router binding we want, and OctaneCompat de-risks the ecosystem gap. Kept Octane.
 - **Semantic search in v1.** Embeddings + Convex vector search works, but it solves a discovery problem the product does not have yet. Cut from v1.
 - **Storing movies ourselves (weekly TMDB dump).** Full control and offline search, but adds ingestion jobs and ~1 GB of data for a v1 that a search endpoint already serves. Rejected for now; the `films` cache table leaves the door open.
+- **TypeBox instead of Valibot.** TypeBox compiles JSON Schema and is faster at raw throughput, but it lacks native Standard Schema support for TanStack Router and bundles larger for our few small schemas. Parse speed is not our bottleneck; bundle size is budgeted. Kept Valibot.
 - **Letterboxd API.** Access is gated and the product does not need reviews/diary data. Rejected.
 
 ## Future work

@@ -15,6 +15,10 @@ Group film-watchlist app. Friends join a group by invite link, post films, vote 
 
 ## Code style
 
+- **Type-safe.** TypeScript strict mode. No `any`, no `as` casts, no non-null `!`. If the type system fights you, the model is wrong — fix the model.
+- **Data-oriented.** Plain serializable objects, no classes, no inheritance. Types describe the data exactly: unions over booleans-plus-flags, literal types over strings. Make illegal states unrepresentable.
+- **Functional.** Pure functions transforming data; side effects only at the edges (Convex functions, DOM). No mutation of inputs. Logic is composed from small functions, not orchestrated in big ones.
+- **Parse, don't validate.** Every external boundary parses into a domain type with **Valibot**: TMDB responses, route search params (TanStack Router accepts Valibot schemas via Standard Schema), invite tokens, any env var. Inside the boundary, data is trusted and typed. Convex's own `v` validators own the database schema and function args — Valibot owns everything Convex does not cover.
 - Small functions with one job. If describing a function needs "and", split it.
 - Names are full words. No abbreviations, no `data`/`info`/`utils`/`helper`/`manager`, no synonyms — one concept has one name, taken from the glossary below.
 - A comment must never narrate an edit or explain what changed. Code is always the present; it does not describe itself. No "now we…", "changed to…", "this replaces…", "instead of…". If a comment explains the diff, delete it — the commit message carries that. The rare valid comment states a non-obvious invariant or an external contract. Default is zero comments.
