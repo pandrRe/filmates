@@ -119,6 +119,40 @@ img {
   flex: 1;
 }
 
+.votes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 24px;
+}
+
+.arrow {
+  color: var(--muted);
+  line-height: 1;
+  padding: 4px;
+}
+
+.arrow-active {
+  color: var(--seen);
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: var(--rule);
+}
+
+.dot-seen {
+  background: var(--seen);
+}
+
 .rank {
   width: 20px;
   color: var(--muted);

@@ -6,7 +6,9 @@ import { action, internalMutation, internalQuery, query } from "./_generated/ser
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireUserId } from "./authentication";
 import { requireMemberId, requireMembership } from "./memberships";
+import { listSeenMarks } from "./seenMarks";
 import { fetchFilm, searchFilms, type Film, type FilmSearchResult } from "./tmdb";
+import { findVote, readVote, type Vote } from "./votes";
 
 const CACHE_LIFETIME_MILLISECONDS = 24 * 60 * 60 * 1000;
 const REPEATED_SPACE = /\s+/g;
@@ -37,6 +39,9 @@ export type GroupFilm = {
   film: Film;
   score: number;
   postedAt: number;
+  myVote: Vote;
+  mySeen: boolean;
+  seenBy: Array<Id<"users">>;
 };
 
 export type PostResult =
@@ -168,7 +173,7 @@ export const post = action({
 export const listForGroup = query({
   args: { groupId: v.string() },
   handler: async (ctx, args): Promise<Array<GroupFilm>> => {
-    const { groupId } = await requireMembership(ctx, args.groupId);
+    const { groupId, memberId } = await requireMembership(ctx, args.groupId);
     const groupFilms = await ctx.db
       .query("groupFilms")
       .withIndex("by_group_score", (q) => q.eq("groupId", groupId))
@@ -180,11 +185,18 @@ export const listForGroup = query({
         if (film === null) {
           throw new Error(`film ${groupFilm.filmId} does not exist`);
         }
+        const [vote, seenMarks] = await Promise.all([
+          findVote(ctx, groupFilm._id, memberId),
+          listSeenMarks(ctx, groupFilm._id),
+        ]);
         return {
           id: groupFilm._id,
           film: toFilm(film),
           score: groupFilm.score,
           postedAt: groupFilm._creationTime,
+          myVote: readVote(vote),
+          mySeen: seenMarks.some((mark) => mark.userId === memberId),
+          seenBy: seenMarks.map((mark) => mark.userId),
         };
       }),
     );
