@@ -11,8 +11,8 @@ import { convexClient } from "../convex/client";
 import { useLiveQuery } from "../convex/useLiveQuery";
 import { describeError } from "../describeError";
 import { FilmPoster } from "../films/FilmPoster";
-import { matchesQuery } from "../films/fuzzy";
 import { LazyFilmSheet, prefetchFilmSheet } from "../films/LazyFilmSheet";
+import { matchTitle } from "../films/search";
 import { SeenDots } from "../films/SeenDots";
 import { filmSpecification } from "../films/specification";
 import { useRankReorder } from "../films/useRankReorder";
@@ -144,6 +144,24 @@ function keeps(groupFilm: GroupFilm, filter: Filter, memberCount: number): boole
   return true;
 }
 
+type RankedFilm = { groupFilm: GroupFilm; rank: number; relevance: number };
+
+function rankFilms(
+  films: Array<GroupFilm>,
+  filter: Filter,
+  memberCount: number,
+  query: string,
+): Array<RankedFilm> {
+  return films
+    .map((groupFilm, index) => ({ groupFilm, rank: index + 1 }))
+    .filter((entry) => keeps(entry.groupFilm, filter, memberCount))
+    .flatMap((entry) => {
+      const match = matchTitle(entry.groupFilm.film.title, query);
+      return match.status === "matched" ? [{ ...entry, relevance: match.relevance }] : [];
+    })
+    .toSorted((left, right) => right.relevance - left.relevance || left.rank - right.rank);
+}
+
 function FilmList(props: {
   groupId: string;
   members: Array<Member>;
@@ -174,13 +192,7 @@ function FilmList(props: {
     return <p class="muted">No films yet. Add the first.</p>;
   }
 
-  const ranked = films.value
-    .map((groupFilm, index) => ({ groupFilm, rank: index + 1 }))
-    .filter(
-      (entry) =>
-        keeps(entry.groupFilm, props.filter, props.members.length) &&
-        matchesQuery(entry.groupFilm.film.title, props.query),
-    );
+  const ranked = rankFilms(films.value, props.filter, props.members.length, props.query);
 
   useRankReorder(list, ranked.map((entry) => entry.groupFilm.id).join(","));
 

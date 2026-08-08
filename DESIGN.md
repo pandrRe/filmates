@@ -22,7 +22,7 @@ Groups of friends collect film ideas in chat threads. The ideas get lost. There 
 - A member gives one vote per film: up, down, or none.
 - A member marks a film as seen. The mark is per member.
 - The main view sorts films by `upvotes − downvotes`.
-- Search is fuzzy, both inside the group list and against the movie database.
+- Search narrows the group list by title as the user types, and reaches the movie database for films not yet posted.
 - All state updates are live. No refresh button.
 - The app is fast: first load under ~1.5 s on 4G, interactions under 100 ms.
 - The UI works one-handed on a phone.
@@ -80,7 +80,7 @@ A single ranked list:
 - The dot row shows one icon per member. Green = seen. Grey = not seen. Tap the row to see names.
 - Voting is the only action on a row. Marking seen lives in the bottom sheet: a second button on the row costs the width that keeps the specification line on one line, and seen is a rarer act than voting.
 - Filters: `All · Unseen by me · Seen by all`. "Seen by all" is the watch-next shortlist in reverse: it shows what the group can retire.
-- The search field filters the group list with fuzzy matching as the user types. The same field offers "Search the movie database →" as the last result row, which jumps to the add-film flow.
+- The search field filters the group list by title as the user types, best match first. The same field offers "Search the movie database →" as the last result row, which jumps to the add-film flow.
 
 ## System design
 
@@ -129,10 +129,14 @@ Two different problems, two different tools:
 
 | Scope | Data size | Tool |
 |---|---|---|
-| Inside the group list | ≤ a few hundred films | Client-side fuzzy match (fzf-style subsequence scoring, ~50 lines, no dependency). Zero latency. |
+| Inside the group list | ≤ a few hundred films | Client-side word match on the title, ranked by relevance. Zero latency. |
 | Movie database | Millions of films | TMDB `/search/movie` via Convex action, debounced 200 ms, cached. |
 
-Semantic search is deferred, see [Future work](#future-work). For v1, fuzzy is enough: users search by title, not by vibe.
+The group filter splits the query on whitespace and keeps a film only when every word is a substring of its title. Order within the matches is by relevance — a word at the title start scores 100, at a word start 50, anywhere else 10 — and vote rank breaks ties. An empty query scores every film 0, so the list falls back to pure vote rank.
+
+fzf-style subsequence matching was the first implementation and was wrong for this data. A subsequence matcher assumes long strings and typed initials; film titles are short, so almost every query matched almost every title — `"e"` kept all ten films of a test list, `"a"` kept nine. The filter looked broken because it was: one or two characters changed nothing on screen. Substring-per-word is stricter, is what a person typing a title expects, and still finds `"la haine"` from `"haine la"`.
+
+Semantic search is deferred, see [Future work](#future-work). For v1, matching titles is enough: users search by title, not by vibe.
 
 ### Type safety and validation
 
