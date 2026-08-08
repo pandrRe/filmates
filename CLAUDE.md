@@ -13,6 +13,24 @@ Group film-watchlist app. Friends join a group by invite link, post films, vote 
 - Backend: **Convex** — live queries for all reads, mutations for all writes, actions for TMDB calls. Convex has no Octane binding: use the `useLiveQuery` wrapper around `ConvexClient` (`convex/browser`).
 - Movie data: **TMDB**, server-side only. Films are cached in the `films` table on first post.
 
+## Code style
+
+- Small functions with one job. If describing a function needs "and", split it.
+- Names are full words. No abbreviations, no `data`/`info`/`utils`/`helper`/`manager`, no synonyms — one concept has one name, taken from the glossary below.
+- A comment must never narrate an edit or explain what changed. Code is always the present; it does not describe itself. No "now we…", "changed to…", "this replaces…", "instead of…". If a comment explains the diff, delete it — the commit message carries that. The rare valid comment states a non-obvious invariant or an external contract. Default is zero comments.
+
+## Domain glossary
+
+One concept, one word — in types, tables, functions, UI copy, and docs.
+
+- **film** — never "movie". TMDB says "movie"; translate at the API boundary and nowhere else.
+- **group** — a private circle of members, created with a name and a member limit.
+- **member** — a user inside a group. "User" means only the account.
+- **invite** — a token link that admits a user into a group.
+- **post** — the act of adding a film to a group. The resulting row is a **groupFilm**.
+- **vote** — up or down. **score** = upvotes − downvotes, denormalized on the groupFilm.
+- **seen** — the per-member mark, stored in `seenMarks`. Never "watched".
+
 ## Rules
 
 - Commit frequently with the `/commit` skill: one coherent change per commit, after every working unit — not one big commit at the end.

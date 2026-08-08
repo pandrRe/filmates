@@ -6,7 +6,9 @@ Run this before you end a work session. Skip items whose area you did not touch.
 
 - [ ] The change matches DESIGN.md. If it does not, update DESIGN.md in the same commit and say so.
 - [ ] No dead code, no commented-out blocks, no TODO without an owner.
-- [ ] Comments follow the rule: only non-obvious invariants, contracts, or gotchas. Zero narration.
+- [ ] No comment narrates an edit or explains a change. Code is the present; it does not describe itself. The only valid comment states a non-obvious invariant or external contract.
+- [ ] Functions are small and do one job.
+- [ ] Names come from the CLAUDE.md glossary. No "movie", no "watched", no `utils`/`helper`/`data`.
 - [ ] Work is committed with the `/commit` skill. Small, coherent commits — one idea per commit.
 
 ## Docs
