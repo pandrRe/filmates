@@ -101,7 +101,7 @@ Phone / browser
 - Routes: `/` (group list → redirect to last group), `/g/$groupId` (main view), `/g/$groupId/add`, `/join/$token`, `/settings`.
 - Filter and search state live in the URL as validated search params. A shared link reproduces the exact view.
 - PWA: manifest + service worker for install and instant repeat loads. App shell is cached; data is never cached stale — live queries own the data.
-- Risk note: Octane is new (production-ready for web, but a young ecosystem). The escape hatch is `octane/react` (OctaneCompat), which runs React libraries unchanged.
+- Risk note: Octane is new (production-ready for web, but a young ecosystem). There is no escape hatch: `octane/react` mounts Octane islands inside a React app, which is the opposite direction. A React-only library cannot run here, so every React dependency must have an Octane port or a framework-agnostic core we bind ourselves.
 
 ### Backend: Convex
 
@@ -110,9 +110,9 @@ Convex is the right fit and we keep it:
 - **Live queries** push vote and seen changes to all group members over WebSocket. This is the core product feel, and we get it with zero infrastructure.
 - **Mutations are transactions.** The join-with-member-limit check and the one-post-per-film rule are single mutations with no race conditions.
 - **Actions** call TMDB from the server. The TMDB key never reaches the client.
-- **Auth:** Convex Auth with Google + email OTP. One vendor fewer than Clerk; enough for a friends app.
+- **Auth:** Convex Auth with the Password provider — email, password, and a display name. It needs no third-party account and no outbound mail, so the app deploys with only a Convex key pair. Google sign-in and email OTP both need vendor credentials; see [Future work](#future-work).
 
-Convex has no official Octane binding. The fix is small: Convex ships a framework-agnostic client (`ConvexClient` in `convex/browser`) with `onUpdate` subscriptions. We wrap it in a ~30-line `useLiveQuery` hook for Octane. If that stalls, OctaneCompat can run Convex's React hooks as-is.
+Convex has no official Octane binding. The fix is small: Convex ships a framework-agnostic client (`ConvexClient` in `convex/browser`) with `onUpdate` subscriptions. We wrap it in a small `useLiveQuery` hook for Octane. Convex Auth is used server-side only for the same reason: its client package is React. The browser side of the token protocol is ours — sign in and sign out are plain `auth:signIn` and `auth:signOut` actions, and the JWT plus refresh token live in `localStorage`.
 
 ### Movie data: TMDB
 
@@ -165,10 +165,10 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 Convex tables. All lookups go through indexes.
 
 ```ts
-users        { name, image, authId }
+users        { name?, email?, image?, ... }         // from Convex Auth `authTables`
 groups       { name, ownerId, memberLimit }        // memberLimit: 1–25
-memberships  { groupId, userId }                    // index: by_group, by_user
-invites      { groupId, token, expiresAt, revoked } // index: by_token
+memberships  { groupId, userId }                    // index: by_group, by_user, by_group_user
+invites      { groupId, token, expiresAt, revoked } // index: by_token, by_group
 films        { tmdbId, title, year, runtime,
                director, posterPath }               // index: by_tmdbId (global cache)
 groupFilms   { groupId, filmId, postedBy,
@@ -178,6 +178,10 @@ seenMarks    { groupFilmId, userId }                // index: by_groupFilm, uniq
 ```
 
 Post time comes from Convex's built-in `_creationTime`; no table stores its own timestamp.
+
+`authTables` also brings the session, account, and verification tables that Convex Auth owns. Every field on `users` is optional there, so a display name is required at the sign-up boundary and parsed again on every read: a user row without a name is an error, never a placeholder.
+
+An invite is issued per group and reused while it is live. It expires 7 days after it is issued, and any member can revoke it, which closes every live invite for that group. Redeeming one checks in a single transaction that the token exists, is live, and that the group is below its member limit.
 
 `groupFilms.score` is denormalized. The vote mutation updates the vote row and the score in the same transaction. The main view is then one indexed range read (`by_group_score`), not an aggregation.
 
@@ -299,6 +303,7 @@ How we stay inside it: Octane's compiled output (no VDOM, no framework runtime c
 
 ## Future work
 
+- **Google sign-in and email OTP.** Both are one provider entry in `convex/auth.ts`, but Google needs OAuth credentials from the Google Cloud console and OTP needs a mail vendor key. Password sign-in ships first because it needs neither.
 - **Semantic search:** embed `title + overview + genres` for cached films, store in a Convex vector index, and let the search field answer queries like "slow sci-fi from the 70s". This layers on top of the existing action without schema changes.
 - Watch-night scheduling (pick a date, attach the top unseen film).
 - "Seen it" import from Letterboxd CSV export.

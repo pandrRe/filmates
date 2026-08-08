@@ -7,7 +7,8 @@
   },
   "rules": {
     "no-explicit-any": "error",
-    "no-non-null-assertion": "error"
+    "no-non-null-assertion": "error",
+    "no-underscore-dangle": ["error", { "allow": ["_id", "_creationTime"] }]
   },
   "ignorePatterns": ["src/routeTree.gen.ts", "convex/_generated", "dist"]
 }

@@ -1,11 +1,9 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  users: defineTable({
-    name: v.string(),
-    image: v.optional(v.string()),
-  }),
+  ...authTables,
 
   groups: defineTable({
     name: v.string(),
@@ -18,7 +16,8 @@ export default defineSchema({
     userId: v.id("users"),
   })
     .index("by_group", ["groupId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_group_user", ["groupId", "userId"]),
 
   invites: defineTable({
     groupId: v.id("groups"),
