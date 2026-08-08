@@ -152,6 +152,8 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 - **pnpm** for package management. One lockfile, strict node_modules.
 - **TypeScript 7** (native compiler, GA July 2026) in strict mode — 8–12× faster builds than 6.x.
 - **Vite** (latest) for dev server and production build, with the Octane compiler plugin.
+- **Source files are plain `.tsx`**, not Octane's `.tsrx` dialect. `.tsrx` needs `tsrx-tsc` and a TypeScript language-service plugin, both of which run on the TypeScript 6.x programmatic API and cannot work with TypeScript 7. Octane compiles `.tsx` with no loss of features.
+- **@octanejs/base-ui** for interactive components (dialog, popover, menu, toggle). Base UI ships unstyled primitives with the accessibility behaviour already correct; all appearance comes from the six design tokens below. No component library brings its own styling into this project.
 - **oxlint + oxfmt** for lint and format — the Rust Oxc toolchain, ~30× faster than Prettier. Rust tools also sidestep TS 7's not-yet-stable programmatic API, which still blocks typescript-eslint.
 - **lefthook** pre-commit hooks: format staged files, `oxlint --fix`, `tsc --noEmit`. The hook keeps every commit clean; nothing unformatted or failing reaches history.
 - Policy: dependencies stay on latest stable. Few dependencies is the first rule; latest versions of the few is the second.
@@ -168,11 +170,13 @@ memberships  { groupId, userId }                    // index: by_group, by_user
 invites      { groupId, token, expiresAt, revoked } // index: by_token
 films        { tmdbId, title, year, runtime,
                director, posterPath }               // index: by_tmdbId (global cache)
-groupFilms   { groupId, filmId, postedBy, postedAt,
+groupFilms   { groupId, filmId, postedBy,
                score }                              // index: by_group_score, unique (groupId, filmId)
 votes        { groupFilmId, userId, value: 1 | -1 } // index: by_groupFilm, unique (groupFilmId, userId)
 seenMarks    { groupFilmId, userId }                // index: by_groupFilm, unique (groupFilmId, userId)
 ```
+
+Post time comes from Convex's built-in `_creationTime`; no table stores its own timestamp.
 
 `groupFilms.score` is denormalized. The vote mutation updates the vote row and the score in the same transaction. The main view is then one indexed range read (`by_group_score`), not an aggregation.
 
