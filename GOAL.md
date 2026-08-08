@@ -36,6 +36,11 @@ committed before the next begins.
 7. PWA + performance — manifest, service worker (app shell only), route
    code splitting, poster loading rules. Measure against § Performance
    budget and paste the real numbers.
+8. Production — deploy Convex to a production deployment (npx convex deploy)
+   with TMDB_API_KEY set in its environment, and the frontend to my personal
+   Vercel account (vercel CLI, personal scope, not a team). Production build
+   points at the production Convex URL. The invite-link flow works on the
+   deployed domain. Paste the live URL and the production budget numbers.
 
 Rules of engagement:
 
@@ -50,6 +55,8 @@ Rules of engagement:
 - If an Octane binding is missing for something, first try the OctaneCompat
   escape hatch before writing custom infrastructure.
 
-Done means: on a phone, I can create a group, open an invite link as a second
-user, post films, vote, mark seen, and watch the ranking reorder live in both
-sessions — with every CHECKLIST.md item passing and all work committed.
+Done means: on my phone, on the live Vercel URL backed by the production
+Convex deployment, I can create a group, open an invite link as a second
+user, post films, vote, mark seen, and watch the ranking reorder live in
+both sessions — with every CHECKLIST.md item passing and all work committed
+and pushed.

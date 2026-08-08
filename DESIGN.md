@@ -155,6 +155,7 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 - **oxlint + oxfmt** for lint and format — the Rust Oxc toolchain, ~30× faster than Prettier. Rust tools also sidestep TS 7's not-yet-stable programmatic API, which still blocks typescript-eslint.
 - **lefthook** pre-commit hooks: format staged files, `oxlint --fix`, `tsc --noEmit`. The hook keeps every commit clean; nothing unformatted or failing reaches history.
 - Policy: dependencies stay on latest stable. Few dependencies is the first rule; latest versions of the few is the second.
+- **Deploy:** frontend as static build on Vercel; backend on a Convex production deployment, separate from dev, with its own environment variables.
 
 ## Data model
 
