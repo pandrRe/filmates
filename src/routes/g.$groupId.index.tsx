@@ -1,5 +1,5 @@
 import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "octane";
+import { useRef, useState } from "octane";
 import * as valibot from "valibot";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -11,8 +11,12 @@ import { convexClient } from "../convex/client";
 import { useLiveQuery } from "../convex/useLiveQuery";
 import { describeError } from "../describeError";
 import { FilmPoster } from "../films/FilmPoster";
+import { FilmSheet } from "../films/FilmSheet";
 import { matchesQuery } from "../films/fuzzy";
+import { SeenDots } from "../films/SeenDots";
 import { filmSpecification } from "../films/specification";
+import { useRankReorder } from "../films/useRankReorder";
+import { VoteColumn } from "../films/VoteColumn";
 
 const FilmFilter = valibot.picklist(["all", "unseenByMe", "seenByAll"]);
 
@@ -27,6 +31,7 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
 const GroupSearch = valibot.object({
   filter: valibot.optional(FilmFilter, "all"),
   query: valibot.optional(valibot.pipe(valibot.string(), valibot.maxLength(80)), ""),
+  film: valibot.optional(valibot.pipe(valibot.string(), valibot.maxLength(64))),
 });
 
 export const Route = createFileRoute("/g/$groupId/")({
@@ -51,19 +56,24 @@ function GroupPage() {
         <Link class="wordmark" to="/">
           Filmates
         </Link>
-        <input
-          class="search"
-          type="search"
-          value={search.query}
-          placeholder="Search"
-          aria-label="Search films"
-          autoComplete="off"
-          maxLength={80}
-          onInput={(event) => {
-            const query = event.currentTarget.value;
-            void navigate({ search: (previous) => ({ ...previous, query }), replace: true });
-          }}
-        />
+        <span class="search-field">
+          <span class="search-glyph" aria-hidden="true">
+            ⌕
+          </span>
+          <input
+            class="search"
+            type="search"
+            value={search.query}
+            placeholder="Search"
+            aria-label="Search films"
+            autoComplete="off"
+            maxLength={80}
+            onInput={(event) => {
+              const query = event.currentTarget.value;
+              void navigate({ search: (previous) => ({ ...previous, query }), replace: true });
+            }}
+          />
+        </span>
       </header>
 
       {group.status === "loading" && <p class="muted">Loading</p>}
@@ -101,6 +111,7 @@ function GroupPage() {
             members={group.value.members}
             filter={search.filter}
             query={search.query}
+            openFilm={search.film}
           />
 
           <section class="panel">
@@ -138,8 +149,15 @@ function FilmList(props: {
   members: Array<Member>;
   filter: Filter;
   query: string;
+  openFilm: string | undefined;
 }) {
   const films = useLiveQuery(api.films.listForGroup, { groupId: props.groupId });
+  const navigate = useNavigate({ from: Route.fullPath });
+  const list = useRef<HTMLOListElement | null>(null);
+
+  function showFilm(film: string | undefined) {
+    void navigate({ search: (previous) => ({ ...previous, film }), replace: true });
+  }
 
   if (films.status === "loading") {
     return <p class="muted">Loading</p>;
@@ -159,16 +177,21 @@ function FilmList(props: {
         matchesQuery(entry.groupFilm.film.title, props.query),
     );
 
+  useRankReorder(list, ranked.map((entry) => entry.groupFilm.id).join(","));
+
   return (
     <>
       {ranked.length === 0 && <p class="muted">Nothing matches.</p>}
-      <ol class="rows">
+      <ol class="rows" ref={list}>
         {ranked.map((entry) => (
           <FilmRow
             key={entry.groupFilm.id}
             groupFilm={entry.groupFilm}
             rank={entry.rank}
             members={props.members}
+            open={entry.groupFilm.id === props.openFilm}
+            onOpen={() => showFilm(entry.groupFilm.id)}
+            onClose={() => showFilm(undefined)}
           />
         ))}
       </ol>
@@ -186,7 +209,14 @@ function FilmList(props: {
   );
 }
 
-function FilmRow(props: { groupFilm: GroupFilm; rank: number; members: Array<Member> }) {
+function FilmRow(props: {
+  groupFilm: GroupFilm;
+  rank: number;
+  members: Array<Member>;
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
   const [castVote, setCastVote] = useState<Vote | null>(null);
   const [markedSeen, setMarkedSeen] = useState<boolean | null>(null);
 
@@ -213,60 +243,49 @@ function FilmRow(props: { groupFilm: GroupFilm; rank: number; members: Array<Mem
   }
 
   return (
-    <li class="film-row">
-      <span class="votes">
-        <button
-          class={vote === "up" ? "arrow arrow-active" : "arrow"}
-          type="button"
-          aria-label={`Vote up ${props.groupFilm.film.title}`}
-          aria-pressed={vote === "up"}
-          onClick={() => void cast("up")}
-        >
-          ▲
-        </button>
-        <span class="score">{score}</span>
-        <button
-          class={vote === "down" ? "arrow arrow-active" : "arrow"}
-          type="button"
-          aria-label={`Vote down ${props.groupFilm.film.title}`}
-          aria-pressed={vote === "down"}
-          onClick={() => void cast("down")}
-        >
-          ▼
-        </button>
-      </span>
-      <span class="rank">{props.rank}</span>
-      <FilmPoster title={props.groupFilm.film.title} posterPath={props.groupFilm.film.posterPath} />
-      <span class="film-title">
-        <span>{props.groupFilm.film.title}</span>
-        <span class="label">{filmSpecification(props.groupFilm.film)}</span>
-        <SeenDots members={props.members} seenBy={props.groupFilm.seenBy} />
-      </span>
+    <li class="film-row" data-film={props.groupFilm.id}>
+      <span class="rank">{rankNumber(props.rank)}</span>
+      <VoteColumn
+        title={props.groupFilm.film.title}
+        vote={vote}
+        score={score}
+        onVote={(direction) => void cast(direction)}
+      />
       <button
-        class="label"
+        class="film-open"
         type="button"
-        aria-label={`Seen ${props.groupFilm.film.title}`}
-        aria-pressed={seen}
-        onClick={() => void toggleSeen()}
+        aria-label={`Open ${props.groupFilm.film.title}`}
+        onClick={props.onOpen}
       >
-        Seen
+        <FilmPoster
+          size="row"
+          title={props.groupFilm.film.title}
+          posterPath={props.groupFilm.film.posterPath}
+        />
+        <span class="film-title">
+          <span class="film-name">{props.groupFilm.film.title}</span>
+          <span class="label">{filmSpecification(props.groupFilm.film)}</span>
+          <SeenDots members={props.members} seenBy={props.groupFilm.seenBy} />
+        </span>
       </button>
+      {props.open && (
+        <FilmSheet
+          groupFilm={props.groupFilm}
+          members={props.members}
+          vote={vote}
+          score={score}
+          seen={seen}
+          onVote={(direction) => void cast(direction)}
+          onToggleSeen={() => void toggleSeen()}
+          onClose={props.onClose}
+        />
+      )}
     </li>
   );
 }
 
-function SeenDots(props: { members: Array<Member>; seenBy: Array<Id<"users">> }) {
-  return (
-    <span class="dots">
-      {props.members.map((member) => (
-        <span
-          key={member.id}
-          class={props.seenBy.includes(member.id) ? "dot dot-seen" : "dot"}
-          title={member.name}
-        />
-      ))}
-    </span>
-  );
+function rankNumber(rank: number): string {
+  return String(rank).padStart(2, "0");
 }
 
 function scoreDelta(from: Vote, to: Vote): number {

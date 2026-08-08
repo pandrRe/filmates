@@ -135,7 +135,7 @@ function AddFilmPage() {
                 disabled={pendingTmdbId !== null}
                 onClick={() => void post(result)}
               >
-                <FilmPoster title={result.title} posterPath={result.posterPath} />
+                <FilmPoster size="row" title={result.title} posterPath={result.posterPath} />
                 <span class="film-title">
                   <span>{result.title}</span>
                   <span class="label">{result.year === null ? "" : result.year}</span>

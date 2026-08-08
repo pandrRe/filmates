@@ -1,11 +1,26 @@
-const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w92";
-const WIDTH = 48;
-const HEIGHT = 72;
+const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
-export function FilmPoster(props: { title: string; posterPath: string | null }) {
+type PosterSize = "row" | "sheet";
+
+type PosterVariant = { source: string; width: number; height: number };
+
+function posterVariant(size: PosterSize): PosterVariant {
+  if (size === "row") {
+    return { source: "w92", width: 48, height: 72 };
+  }
+  return { source: "w342", width: 160, height: 240 };
+}
+
+export function FilmPoster(props: { title: string; posterPath: string | null; size: PosterSize }) {
+  const variant = posterVariant(props.size);
+  const className = props.size === "row" ? "poster" : "poster poster-sheet";
+
   if (props.posterPath === null) {
     return (
-      <div class="poster poster-empty" style={{ width: `${WIDTH}px`, height: `${HEIGHT}px` }}>
+      <div
+        class={`${className} poster-empty`}
+        style={{ width: `${variant.width}px`, height: `${variant.height}px` }}
+      >
         {props.title.slice(0, 1)}
       </div>
     );
@@ -13,11 +28,11 @@ export function FilmPoster(props: { title: string; posterPath: string | null }) 
 
   return (
     <img
-      class="poster"
-      src={`${IMAGE_BASE_URL}${props.posterPath}`}
+      class={className}
+      src={`${IMAGE_BASE_URL}${variant.source}${props.posterPath}`}
       alt=""
-      width={WIDTH}
-      height={HEIGHT}
+      width={variant.width}
+      height={variant.height}
       loading="lazy"
     />
   );

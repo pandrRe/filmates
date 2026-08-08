@@ -78,6 +78,7 @@ A single ranked list:
 
 - Sort: score descending. Tie-break: oldest post first.
 - The dot row shows one icon per member. Green = seen. Grey = not seen. Tap the row to see names.
+- Voting is the only action on a row. Marking seen lives in the bottom sheet: a second button on the row costs the width that keeps the specification line on one line, and seen is a rarer act than voting.
 - Filters: `All · Unseen by me · Seen by all`. "Seen by all" is the watch-next shortlist in reverse: it shows what the group can retire.
 - The search field filters the group list with fuzzy matching as the user types. The same field offers "Search the movie database →" as the last result row, which jumps to the add-film flow.
 
@@ -155,7 +156,7 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 - **Vite** (latest) for dev server and production build, with the Octane compiler plugin.
 - **Source files are plain `.tsx`**, not Octane's `.tsrx` dialect. `.tsrx` needs `tsrx-tsc` and a TypeScript language-service plugin, both of which run on the TypeScript 6.x programmatic API and cannot work with TypeScript 7. Octane compiles `.tsx` with no loss of features.
 - **Route files import from `@tanstack/react-router`, which Vite and TypeScript both alias to `@octanejs/tanstack-router`.** TanStack's route generator derives the import module from its `target` option (`@tanstack/${target}-router`) and rewrites any route file that does not use that exact specifier. The alias satisfies the generator and still binds every symbol to Octane. Octane's binding packages ship raw source, so they are listed in `optimizeDeps.exclude` under the aliased name; the dev server otherwise pre-bundles them without the Octane compiler and fails to parse `.tsrx`.
-- **@octanejs/base-ui** for interactive components (dialog, popover, menu, toggle). Base UI ships unstyled primitives with the accessibility behaviour already correct; all appearance comes from the six design tokens below. No component library brings its own styling into this project.
+- **@octanejs/base-ui** for interactive components (dialog, popover, menu, toggle). Base UI ships unstyled primitives with the accessibility behaviour already correct; all appearance comes from the six design tokens below. No component library brings its own styling into this project. Weigh each primitive against the performance budget before importing it: `Dialog` costs 21 kB gzip and earns it (focus trap, scroll lock, inert background); `Menu` costs 49 kB and did not.
 - **`pnpm run typecheck` reports diagnostics for this repository only.** Octane's packages ship raw TypeScript source, so `tsc` compiles them as part of the program, and `skipLibCheck` covers `.d.ts` files only. Those packages do not compile under `noUncheckedIndexedAccess`, which this repository keeps on. `scripts/typecheck.mjs` runs both projects and drops diagnostics whose path starts with `node_modules/`. Any diagnostic in `src/`, `convex/`, or `tests/` still fails the run.
 - **oxlint + oxfmt** for lint and format — the Rust Oxc toolchain, ~30× faster than Prettier. Rust tools also sidestep TS 7's not-yet-stable programmatic API, which still blocks typescript-eslint.
 - **lefthook** pre-commit hooks: format staged files, `oxlint --fix`, `tsc --noEmit`. The hook keeps every commit clean; nothing unformatted or failing reaches history.
@@ -227,7 +228,7 @@ Swiss means the grid is real, not implied.
 
 - Base unit **4 px**; all spacing is a multiple of it.
 - Phone: 4-column grid, 16 px margins. ≥ 768 px: 12 columns, max content width 1100 px, the list keeps a single column but gains a wider poster and a visible rank column.
-- **Hairlines, not cards.** 1 px rules in `#2c3440` separate rows. No border radius anywhere except avatars (full circle). No shadows, ever.
+- **Hairlines, not cards.** 1 px rules in `#2c3440` separate rows. No border radius anywhere except the seen dots and avatars (full circle). No shadows, ever.
 - **Flush left, ragged right.** Nothing is centered — not titles, not empty states, not modals.
 - **The rank is typography.** Each row leads with its index number — `01`, `02`, `03` — set in the display weight, grey, like a Müller-Brockmann program listing. The score sits with the vote arrows. When ranks change, the numbers stay fixed to position and the films move through them.
 
@@ -285,7 +286,7 @@ Mechanical, not organic. Motion confirms cause and effect; it never entertains.
 
 - One column. Vote arrows on the left edge, inside thumb reach; the dot row on the right is display, not a target.
 - Tap targets ≥ 44 px even where the visual mark is smaller (arrows get invisible padding).
-- Film detail opens as a bottom sheet, not a route change; the URL still updates (`/g/$groupId?film=…`) so it survives share and refresh.
+- Film detail opens as a bottom sheet, not a route change; the URL still updates (`/g/$groupId?film=…`) so it survives share and refresh. The sheet holds the title, the specification line, the `w342` poster, the vote column, the seen toggle, and the names of the members who have seen the film.
 
 ## Performance budget
 

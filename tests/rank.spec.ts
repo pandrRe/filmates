@@ -20,13 +20,13 @@ test("the ranked view filters and searches from the url", async ({ page }) => {
   await addFilm(page, "la haine", "La Haine 1995");
 
   const rows = page.locator("ol.rows > li");
-  await expect(rows.nth(0).locator(".rank")).toHaveText("1");
-  await expect(rows.nth(1).locator(".rank")).toHaveText("2");
+  await expect(rows.nth(0).locator(".rank")).toHaveText("01");
+  await expect(rows.nth(1).locator(".rank")).toHaveText("02");
 
   await page.getByLabel("Search films").fill("hain");
   await expect(rows).toHaveCount(1);
   await expect(rows.nth(0)).toContainText("La Haine");
-  await expect(rows.nth(0).locator(".rank")).toHaveText("2");
+  await expect(rows.nth(0).locator(".rank")).toHaveText("02");
   await expect(page).toHaveURL(/query=hain/);
 
   await page.getByRole("link", { name: "Search the film database" }).click();
@@ -35,11 +35,12 @@ test("the ranked view filters and searches from the url", async ({ page }) => {
   await page.getByLabel("Search films").fill("");
   await expect(rows).toHaveCount(2);
 
-  await page.getByRole("button", { name: "Seen Heat" }).click();
-  await expect(page.getByRole("button", { name: "Seen Heat" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await page.getByRole("button", { name: "Open Heat" }).click();
+  const seenHeat = page.getByRole("button", { name: "Seen Heat" });
+  await seenHeat.click();
+  await expect(seenHeat).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator(".sheet")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Unseen by me" }).click();
   await expect(page).toHaveURL(/filter=unseenByMe/);
