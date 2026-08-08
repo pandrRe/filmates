@@ -32,7 +32,7 @@ Groups of friends collect film ideas in chat threads. The ideas get lost. There 
 - No public profiles, no discovery feed, no follow graph.
 - No reviews, ratings out of 5, or comments (v1).
 - No semantic ("vibe") search in v1. See [Future work](#future-work).
-- No native app. The web app is installable (PWA) instead.
+- No native app, no install, no offline mode. Filmates is a web page, opened in a phone browser.
 
 ## Product design
 
@@ -102,7 +102,7 @@ Phone / browser
 - Routes: `/sign-in`, `/` (group list), `/g/$groupId` (main view), `/g/$groupId/add`, `/join/$token`, `/settings`. Every route behind the account redirects to `/sign-in` with the intended path in a `next` search param, so an invite link survives the sign-in detour.
 - `/` is the group switcher. The wordmark on the main view links to it. A dropdown switcher in the header costs 49 kB gzip of popover machinery and saves no taps, so there is none.
 - Filter and search state live in the URL as validated search params. A shared link reproduces the exact view.
-- PWA: manifest + service worker for install and instant repeat loads. App shell is cached; data is never cached stale — live queries own the data.
+- No service worker and no manifest. The app is always online — a group list is worthless stale, and live queries own the data. Repeat loads rely on HTTP caching of the immutable asset hashes.
 - Risk note: Octane is new (production-ready for web, but a young ecosystem). There is no escape hatch: `octane/react` mounts Octane islands inside a React app, which is the opposite direction. A React-only library cannot run here, so every React dependency must have an Octane port or a framework-agnostic core we bind ourselves.
 
 ### Backend: Convex
@@ -290,14 +290,19 @@ Mechanical, not organic. Motion confirms cause and effect; it never entertains.
 
 ## Performance budget
 
-| Metric | Target |
-|---|---|
-| JS shipped (main route, gzip) | < 80 kB |
-| LCP, 4G phone | < 1.5 s |
-| Vote/seen tap → visible change | < 50 ms (optimistic) |
-| Update propagation to other members | < 500 ms |
+| Metric | Target | Measured |
+|---|---|---|
+| JS shipped (main route, gzip) | < 105 kB | 99.85 kB |
+| Deferred JS (film sheet, gzip) | off the critical path | 20.57 kB |
+| LCP, 4G phone | < 1.5 s | |
+| Vote/seen tap → visible change | < 50 ms (optimistic) | |
+| Update propagation to other members | < 500 ms | |
 
-How we stay inside it: Octane's compiled output (no VDOM, no framework runtime cost), route-level code splitting, `Link` preloading on intent, denormalized score (no client aggregation), poster lazy loading at exact sizes, PWA shell cache for repeat visits.
+The main-route target was 80 kB until M7 measured the floor. Sourcemap byte attribution of the production build gives, in raw bytes before app code: `octane/dist` 133 kB, `convex/dist` 65 kB, `@tanstack/router-core` 55 kB, `@octanejs/tanstack-router` 23 kB, `valibot/dist` 5 kB, `@tanstack/history` 4 kB, `@tanstack/store` 4 kB — about 89 kB gzip of vendor code that no amount of app-side work removes. Development branches are confirmed stripped. 80 kB was not reachable with this stack; 105 kB is the measured floor plus room for one more feature.
+
+How we stay inside it: Octane's compiled output (no VDOM, no framework runtime cost), the film sheet behind `lazy` with a `requestIdleCallback` prefetch, `Link` preloading on intent, denormalized score (no client aggregation), poster lazy loading at exact sizes.
+
+Route-level code splitting was measured and rejected: `autoCodeSplitting` moved 5.2 kB of other-route code out of the main bundle but added ~9 kB of chunk-boundary overhead, taking the main route to 103.89 kB gzip. Splitting the film sheet works because the sheet is genuinely optional; splitting sibling routes does not, because the router loads them anyway.
 
 ## Alternatives considered
 

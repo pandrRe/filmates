@@ -30,9 +30,9 @@ Run this before you end a work session. Skip items whose area you did not touch.
 ## Frontend (Octane)
 
 - [ ] Typecheck passes. Tests pass. Paste the output, do not summarize it.
-- [ ] Main route JS < 80 kB gzip. Check after adding any dependency.
+- [ ] Main route JS < 105 kB gzip. Check after adding any dependency.
 - [ ] New dependencies: latest stable version, installed with pnpm. No `package-lock.json` or `yarn.lock` in the tree.
-- [ ] New routes are code-split. Filter/search state lives in URL search params.
+- [ ] Filter/search state lives in URL search params.
 - [ ] Votes and seen marks update optimistically and reconcile from the live query.
 
 ## Visual
