@@ -42,8 +42,11 @@ const TmdbFilmResponse = valibot.object({
 });
 
 function readYear(releaseDate: string | undefined): number | null {
-  const matched = RELEASE_YEAR.exec(releaseDate ?? "");
-  return matched === null ? null : Number(matched[1]);
+  if (releaseDate === undefined) {
+    return null;
+  }
+  const year = RELEASE_YEAR.exec(releaseDate)?.[1];
+  return year === undefined ? null : Number(year);
 }
 
 function readRuntime(runtime: number | null | undefined): number | null {

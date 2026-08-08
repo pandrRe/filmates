@@ -141,7 +141,7 @@ img {
   gap: 10px;
 }
 
-/* Section heads: label, then a rule running to the edge */
+/* Sections */
 
 .section {
   display: flex;
@@ -372,7 +372,7 @@ img {
   overflow-wrap: anywhere;
 }
 
-/* Vote block: a bordered instrument, not two loose glyphs */
+/* Votes */
 
 .votes {
   display: flex;
@@ -416,7 +416,7 @@ img {
   color: var(--dim);
 }
 
-/* Seen marks: squares, the only red in the app */
+/* Seen marks */
 
 .marks {
   display: flex;
