@@ -179,7 +179,11 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 - **lefthook** pre-commit hooks: format staged files, `oxlint --fix`, `tsc --noEmit`. The hook keeps every commit clean; nothing unformatted or failing reaches history.
 - **Playwright** for end-to-end checks, run at the 375 px viewport against the dev server and the live Convex deployment. There are no unit tests: the risk in this app is the flow across boundaries, not the arithmetic. One spec per user journey.
 - Policy: dependencies stay on latest stable. Few dependencies is the first rule; latest versions of the few is the second.
-- **Deploy:** frontend as static build on Vercel; backend on a Convex production deployment, separate from dev, with its own environment variables.
+- **Deploy:** frontend as a static build on Vercel; backend on the Convex production deployment, separate from dev, with its own environment variables.
+  - `vercel.json` sets the build command, rewrites every path to `index.html` so client-side routes survive a cold load, and marks `/assets/*` immutable for a year. The asset names carry content hashes, so this is safe and it is the whole repeat-load caching strategy.
+  - The frontend reads one variable, `VITE_CONVEX_URL`. It points at the production Convex deployment.
+  - The production Convex deployment holds three variables: `TMDB_API_KEY`, and the `JWT_PRIVATE_KEY` / `JWKS` pair that Convex Auth signs and verifies sessions with. The key pair is per deployment; dev and production do not share one. `CONVEX_SITE_URL` is supplied by Convex itself.
+  - `npx convex deploy` pushes functions to production. It is a separate step from the Vercel deploy.
 
 ## Data model
 
