@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: { "@tanstack/react-router": "@octanejs/tanstack-router" },
   },
+  optimizeDeps: {
+    exclude: ["@tanstack/react-router", "@octanejs/tanstack-router", "@octanejs/base-ui"],
+  },
   plugins: [
     tanstackRouter({
       target: "react",
