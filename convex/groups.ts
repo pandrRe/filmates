@@ -74,12 +74,16 @@ export const listForCurrentUser = query({
 });
 
 export const get = query({
-  args: { groupId: v.id("groups") },
+  args: { groupId: v.string() },
   handler: async (ctx, args): Promise<GroupDetail> => {
-    await requireMemberId(ctx, args.groupId);
-    const group = await ctx.db.get(args.groupId);
+    const groupId = ctx.db.normalizeId("groups", args.groupId);
+    if (groupId === null) {
+      throw new Error(`${args.groupId} is not a group`);
+    }
+    await requireMemberId(ctx, groupId);
+    const group = await ctx.db.get(groupId);
     if (group === null) {
-      throw new Error(`group ${args.groupId} does not exist`);
+      throw new Error(`group ${groupId} does not exist`);
     }
     const memberships = await listMemberships(ctx, group._id);
     const members = await Promise.all(

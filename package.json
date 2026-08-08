@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "test": "playwright test"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
@@ -20,6 +21,7 @@
     "valibot": "^1.4.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tanstack/router-plugin": "^1.168.27",
     "@types/node": "^26.2.0",
     "lefthook": "^2.1.10",

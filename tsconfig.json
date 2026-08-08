@@ -17,5 +17,5 @@
       "@tanstack/react-router": ["./node_modules/@octanejs/tanstack-router/src/index.ts"]
     }
   },
-  "include": ["src/**/*", "vite.config.ts"]
+  "include": ["src/**/*", "tests/**/*", "vite.config.ts", "playwright.config.ts"]
 }
