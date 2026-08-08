@@ -13,7 +13,7 @@ import { describeError } from "../describeError";
 import { FilmPoster } from "../films/FilmPoster";
 import { LazyFilmSheet, prefetchFilmSheet } from "../films/LazyFilmSheet";
 import { matchTitle } from "../films/search";
-import { SeenDots } from "../films/SeenDots";
+import { SeenMarks } from "../films/SeenMarks";
 import { filmSpecification } from "../films/specification";
 import { useRankReorder } from "../films/useRankReorder";
 import { VoteColumn } from "../films/VoteColumn";
@@ -51,86 +51,107 @@ function GroupPage() {
   const group = useLiveQuery(api.groups.get, { groupId });
 
   return (
-    <main class="page">
-      <header class="page-head">
-        <Link class="wordmark" to="/">
-          Filmates
-        </Link>
-        <span class="search-field">
-          <span class="search-glyph" aria-hidden="true">
-            ⌕
-          </span>
-          <input
-            class="search"
-            type="search"
-            value={search.query}
-            placeholder="Search"
-            aria-label="Search films"
-            autoComplete="off"
-            maxLength={80}
-            onInput={(event) => {
-              const query = event.currentTarget.value;
-              void navigate({ search: (previous) => ({ ...previous, query }), replace: true });
-            }}
-          />
-        </span>
-      </header>
+    <>
+      <main class="page">
+        <header class="masthead">
+          <Link class="wordmark" to="/">
+            Filmates
+          </Link>
+        </header>
 
-      {group.status === "loading" && <p class="muted">Loading</p>}
-      {group.status === "failed" && <p class="failure">{group.message}</p>}
+        {group.status === "loading" && <p class="muted">Loading</p>}
+        {group.status === "failed" && <p class="failure">{group.message}</p>}
+        {group.status === "ready" && (
+          <>
+            <div class="subject">
+              <h1 class="display">{group.value.name}</h1>
+              <p class="label">
+                {group.value.memberCount} / {group.value.memberLimit} members
+              </p>
+            </div>
+
+            <div class="section">
+              <label class="search-field">
+                <input
+                  class="search"
+                  type="search"
+                  value={search.query}
+                  placeholder="Search films"
+                  aria-label="Search films"
+                  autoComplete="off"
+                  maxLength={80}
+                  onInput={(event) => {
+                    const query = event.currentTarget.value;
+                    void navigate({
+                      search: (previous) => ({ ...previous, query }),
+                      replace: true,
+                    });
+                  }}
+                />
+              </label>
+
+              <nav class="segmented">
+                {FILTERS.map((filter) => (
+                  <button
+                    class="segment"
+                    key={filter.value}
+                    type="button"
+                    aria-pressed={filter.value === search.filter}
+                    onClick={() => {
+                      void navigate({
+                        search: (previous) => ({ ...previous, filter: filter.value }),
+                        replace: true,
+                      });
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            <FilmList
+              groupId={groupId}
+              members={group.value.members}
+              filter={search.filter}
+              query={search.query}
+              openFilm={search.film}
+            />
+
+            <section class="section">
+              <p class="section-head">
+                <span class="label">Members</span>
+              </p>
+              <ul class="entries">
+                {group.value.members.map((member) => (
+                  <li class="entry" key={member.id}>
+                    <span>{member.name}</span>
+                    {member.id === group.value.ownerId && <span class="label">Owner</span>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <InvitePanel groupId={group.value.id} />
+          </>
+        )}
+      </main>
+
       {group.status === "ready" && (
-        <>
-          <div class="page-head">
-            <h1 class="title">{group.value.name}</h1>
-            <Link class="label" to="/g/$groupId/add" params={{ groupId }} search={{ title: "" }}>
+        <div class="action-bar">
+          <div class="action-bar-inner">
+            <Link
+              class="button button-primary button-wide"
+              to="/g/$groupId/add"
+              params={{ groupId }}
+              search={{ title: "" }}
+            >
               Add film
             </Link>
           </div>
-
-          <nav class="filters">
-            {FILTERS.map((filter) => (
-              <button
-                class={filter.value === search.filter ? "label filter-active" : "label"}
-                key={filter.value}
-                type="button"
-                aria-pressed={filter.value === search.filter}
-                onClick={() => {
-                  void navigate({
-                    search: (previous) => ({ ...previous, filter: filter.value }),
-                    replace: true,
-                  });
-                }}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </nav>
-
-          <FilmList
-            groupId={groupId}
-            members={group.value.members}
-            filter={search.filter}
-            query={search.query}
-            openFilm={search.film}
-          />
-
-          <section class="panel">
-            <p class="label">
-              Members {group.value.memberCount} / {group.value.memberLimit}
-            </p>
-            <ul class="rows">
-              {group.value.members.map((member) => (
-                <li class="row" key={member.id}>
-                  <span>{member.name}</span>
-                  {member.id === group.value.ownerId && <span class="label">Owner</span>}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <InvitePanel groupId={group.value.id} />
-        </>
+        </div>
       )}
-    </main>
+    </>
   );
 }
 
@@ -197,7 +218,10 @@ function FilmList(props: {
   useRankReorder(list, ranked.map((entry) => entry.groupFilm.id).join(","));
 
   return (
-    <>
+    <section class="section">
+      <p class="section-head">
+        <span class="label">Index</span>
+      </p>
       {ranked.length === 0 && <p class="muted">Nothing matches.</p>}
       <ol class="rows" ref={list}>
         {ranked.map((entry) => (
@@ -214,15 +238,15 @@ function FilmList(props: {
       </ol>
       {props.query.trim().length > 0 && (
         <Link
-          class="action"
+          class="button button-wide"
           to="/g/$groupId/add"
           params={{ groupId: props.groupId }}
           search={{ title: props.query }}
         >
-          Search the film database →
+          Search the film database
         </Link>
       )}
-    </>
+    </section>
   );
 }
 
@@ -261,30 +285,34 @@ function FilmRow(props: {
 
   return (
     <li class="film-row" data-film={props.groupFilm.id}>
-      <span class="rank">{rankNumber(props.rank)}</span>
-      <VoteColumn
-        title={props.groupFilm.film.title}
-        vote={vote}
-        score={score}
-        onVote={(direction) => void cast(direction)}
-      />
-      <button
-        class="film-open"
-        type="button"
-        aria-label={`Open ${props.groupFilm.film.title}`}
-        onClick={props.onOpen}
-      >
-        <FilmPoster
-          size="row"
+      <p class="rank-line">
+        <span class="rank">{rankNumber(props.rank)}</span>
+      </p>
+      <div class="film-body">
+        <button
+          class="film-open"
+          type="button"
+          aria-label={`Open ${props.groupFilm.film.title}`}
+          onClick={props.onOpen}
+        >
+          <FilmPoster
+            size="row"
+            title={props.groupFilm.film.title}
+            posterPath={props.groupFilm.film.posterPath}
+          />
+          <span class="film-text">
+            <span class="film-name">{props.groupFilm.film.title}</span>
+            <span class="label">{filmSpecification(props.groupFilm.film)}</span>
+            <SeenMarks members={props.members} seenBy={props.groupFilm.seenBy} />
+          </span>
+        </button>
+        <VoteColumn
           title={props.groupFilm.film.title}
-          posterPath={props.groupFilm.film.posterPath}
+          vote={vote}
+          score={score}
+          onVote={(direction) => void cast(direction)}
         />
-        <span class="film-title">
-          <span class="film-name">{props.groupFilm.film.title}</span>
-          <span class="label">{filmSpecification(props.groupFilm.film)}</span>
-          <SeenDots members={props.members} seenBy={props.groupFilm.seenBy} />
-        </span>
-      </button>
+      </div>
       {props.open && (
         <LazyFilmSheet
           groupFilm={props.groupFilm}
@@ -343,15 +371,17 @@ function InvitePanel(props: { groupId: Id<"groups"> }) {
   }
 
   return (
-    <section class="panel">
-      <p class="label">Invite</p>
+    <section class="section">
+      <p class="section-head">
+        <span class="label">Invite</span>
+      </p>
       {link !== null && <p class="invite-link">{link}</p>}
       {failure !== null && <p class="failure">{failure}</p>}
-      <div class="actions">
-        <button class="action" type="button" onClick={() => void issue()}>
+      <div class="buttons">
+        <button class="button button-wide" type="button" onClick={() => void issue()}>
           Copy invite link
         </button>
-        <button class="label" type="button" onClick={() => void revoke()}>
+        <button class="button" type="button" onClick={() => void revoke()}>
           Revoke
         </button>
       </div>

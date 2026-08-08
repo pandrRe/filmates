@@ -9,7 +9,7 @@ export function VoteColumn(props: {
   return (
     <span class="votes">
       <button
-        class={props.vote === "up" ? "arrow arrow-up-active" : "arrow"}
+        class={props.vote === "up" ? "arrow arrow-active" : "arrow"}
         type="button"
         aria-label={`Vote up ${props.title}`}
         aria-pressed={props.vote === "up"}
@@ -17,9 +17,9 @@ export function VoteColumn(props: {
       >
         ▲
       </button>
-      <span class={props.score > 0 ? "score score-positive" : "score"}>{props.score}</span>
+      <span class={props.score === 0 ? "score score-zero" : "score"}>{props.score}</span>
       <button
-        class={props.vote === "down" ? "arrow arrow-down-active" : "arrow"}
+        class={props.vote === "down" ? "arrow arrow-active" : "arrow"}
         type="button"
         aria-label={`Vote down ${props.title}`}
         aria-pressed={props.vote === "down"}

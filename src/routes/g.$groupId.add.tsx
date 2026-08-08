@@ -101,13 +101,13 @@ function AddFilmPage() {
 
   return (
     <main class="page">
-      <header class="page-head">
-        <Link class="label" to="/g/$groupId" params={{ groupId }}>
+      <header class="masthead">
+        <Link class="wordmark" to="/g/$groupId" params={{ groupId }}>
           Back
         </Link>
       </header>
 
-      <h1 class="wordmark">Add film</h1>
+      <h1 class="display">Add film</h1>
 
       <label class="field">
         <span class="label">Title</span>
@@ -126,18 +126,18 @@ function AddFilmPage() {
         <p class="muted">Nothing found.</p>
       )}
       {search.status === "ready" && (
-        <ul class="rows">
+        <ul class="results">
           {search.results.map((result) => (
             <li key={result.tmdbId}>
               <button
-                class="film-row"
+                class="result"
                 type="button"
                 disabled={pendingTmdbId !== null}
                 onClick={() => void post(result)}
               >
                 <FilmPoster size="row" title={result.title} posterPath={result.posterPath} />
-                <span class="film-title">
-                  <span>{result.title}</span>
+                <span class="result-text">
+                  <span class="result-title">{result.title}</span>
                   <span class="label">{result.year === null ? "" : result.year}</span>
                 </span>
               </button>

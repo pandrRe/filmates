@@ -38,7 +38,9 @@ function JoinPage() {
 
   return (
     <main class="page">
-      <h1 class="wordmark">Filmates</h1>
+      <header class="masthead">
+        <h1 class="wordmark">Filmates</h1>
+      </header>
 
       {invite.status === "loading" && <p class="muted">Loading</p>}
       {invite.status === "failed" && <p class="failure">{invite.message}</p>}
@@ -53,18 +55,25 @@ function JoinPage() {
       )}
       {invite.status === "ready" && invite.value.status === "open" && (
         <>
-          <p class="label">Join {invite.value.groupName}</p>
-          <p class="muted">
-            {invite.value.memberCount} / {invite.value.memberLimit} members
-          </p>
+          <div class="subject">
+            <h2 class="display">{invite.value.groupName}</h2>
+            <p class="label">
+              {invite.value.memberCount} / {invite.value.memberLimit} members
+            </p>
+          </div>
           {failure !== null && <p class="failure">{failure}</p>}
-          <button class="action" type="button" disabled={pending} onClick={() => void join()}>
+          <button
+            class="button button-primary button-wide"
+            type="button"
+            disabled={pending}
+            onClick={() => void join()}
+          >
             Join group
           </button>
         </>
       )}
 
-      <Link class="label" to="/">
+      <Link class="button button-wide" to="/">
         Groups
       </Link>
     </main>

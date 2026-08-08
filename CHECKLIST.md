@@ -37,14 +37,17 @@ Run this before you end a work session. Skip items whose area you did not touch.
 
 ## Visual
 
-- [ ] Only the six color tokens. No new colors, no gradients, no shadows, no border radius (avatars excepted).
+- [ ] Only the seven color tokens. No new colors, no gradients, no shadows. `--mark` red is used for seen state and nothing else.
+- [ ] No border radius anywhere. Nothing is round.
 - [ ] Helvetica stack only. Titles uppercase bold; numbers `tabular-nums`.
-- [ ] All spacing is a multiple of 4 px. Nothing is centered.
+- [ ] All spacing is a multiple of 4 px. Nothing is centered except a button legend.
+- [ ] Every interactive element has a visible edge. No bare text acting as a button.
 - [ ] Posters: strict 2:3, hard corners, correct TMDB size for the slot, explicit width/height.
 - [ ] No icons where a word works. No emoji anywhere.
 
 ## Phone
 
-- [ ] Layout works at 375 px width, one-handed.
-- [ ] Tap targets ≥ 44 px, including the vote arrows.
+- [ ] Layout checked at 375 px width before anything else, one-handed.
+- [ ] Buttons 48 px, other tap targets ≥ 44 px.
+- [ ] The primary action is in the fixed bottom bar and never covers the last row.
 - [ ] Film detail opens as a bottom sheet and survives refresh via the URL.

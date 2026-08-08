@@ -41,15 +41,15 @@ test("votes rank the list and seen marks show", async ({ page }) => {
   await page.getByRole("button", { name: "Open Heat" }).click();
   const seenHeat = page.getByRole("button", { name: "Seen Heat" });
   await expect(seenHeat).toBeVisible();
-  await expect(page.locator(".dot-seen")).toHaveCount(0);
+  await expect(page.locator(".mark-seen")).toHaveCount(0);
 
   await seenHeat.click();
   await expect(seenHeat).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".dot-seen")).toHaveCount(1);
+  await expect(page.locator(".mark-seen")).toHaveCount(1);
 
   await seenHeat.click();
   await expect(seenHeat).toHaveAttribute("aria-pressed", "false");
-  await expect(page.locator(".dot-seen")).toHaveCount(0);
+  await expect(page.locator(".mark-seen")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Close" }).click();
   await expect(page.locator(".sheet")).toHaveCount(0);

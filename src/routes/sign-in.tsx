@@ -47,8 +47,10 @@ function SignInPage() {
 
   return (
     <main class="page">
-      <h1 class="wordmark">Filmates</h1>
-      <p class="label">{flow === "signUp" ? "Create an account" : "Sign in"}</p>
+      <header class="masthead">
+        <h1 class="wordmark">Filmates</h1>
+      </header>
+      <h2 class="display">{flow === "signUp" ? "Create an account" : "Sign in"}</h2>
 
       <form class="form" onSubmit={submit}>
         {flow === "signUp" && (
@@ -88,13 +90,13 @@ function SignInPage() {
 
         {failure !== null && <p class="failure">{failure}</p>}
 
-        <button class="action" type="submit" disabled={pending}>
+        <button class="button button-primary button-wide" type="submit" disabled={pending}>
           {flow === "signUp" ? "Create account" : "Sign in"}
         </button>
       </form>
 
       <button
-        class="label switch"
+        class="button button-wide"
         type="button"
         onClick={() => {
           setFailure(null);

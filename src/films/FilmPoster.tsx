@@ -6,14 +6,14 @@ type PosterVariant = { source: string; width: number; height: number };
 
 function posterVariant(size: PosterSize): PosterVariant {
   if (size === "row") {
-    return { source: "w92", width: 48, height: 72 };
+    return { source: "w154", width: 64, height: 96 };
   }
-  return { source: "w342", width: 160, height: 240 };
+  return { source: "w342", width: 96, height: 144 };
 }
 
 export function FilmPoster(props: { title: string; posterPath: string | null; size: PosterSize }) {
   const variant = posterVariant(props.size);
-  const className = props.size === "row" ? "poster" : "poster poster-sheet";
+  const className = props.size === "row" ? "poster poster-row" : "poster sheet-poster";
 
   if (props.posterPath === null) {
     return (

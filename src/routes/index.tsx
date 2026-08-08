@@ -23,7 +23,7 @@ function GroupListPage() {
 
   return (
     <main class="page">
-      <header class="page-head">
+      <header class="masthead">
         <h1 class="wordmark">Filmates</h1>
         <button
           class="label"
@@ -36,26 +36,30 @@ function GroupListPage() {
         </button>
       </header>
 
-      <p class="label">Groups</p>
-      {groups.status === "loading" && <p class="muted">Loading</p>}
-      {groups.status === "failed" && <p class="failure">{groups.message}</p>}
-      {groups.status === "ready" && groups.value.length === 0 && (
-        <p class="muted">No groups yet. Create the first.</p>
-      )}
-      {groups.status === "ready" && (
-        <ul class="rows">
-          {groups.value.map((group) => (
-            <li key={group.id}>
-              <Link class="row" to="/g/$groupId" params={{ groupId: group.id }}>
-                <span>{group.name}</span>
-                <span class="label">
-                  {group.memberCount} / {group.memberLimit}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section class="section">
+        <p class="section-head">
+          <span class="label">Groups</span>
+        </p>
+        {groups.status === "loading" && <p class="muted">Loading</p>}
+        {groups.status === "failed" && <p class="failure">{groups.message}</p>}
+        {groups.status === "ready" && groups.value.length === 0 && (
+          <p class="muted">No groups yet. Create the first.</p>
+        )}
+        {groups.status === "ready" && (
+          <ul class="entries">
+            {groups.value.map((group) => (
+              <li key={group.id}>
+                <Link class="entry" to="/g/$groupId" params={{ groupId: group.id }}>
+                  <span class="title">{group.name}</span>
+                  <span class="label">
+                    {group.memberCount} / {group.memberLimit}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <CreateGroupForm />
     </main>
@@ -85,7 +89,9 @@ function CreateGroupForm() {
 
   return (
     <form class="form" onSubmit={submit}>
-      <p class="label">New group</p>
+      <p class="section-head">
+        <span class="label">New group</span>
+      </p>
 
       <label class="field">
         <span class="label">Name</span>
@@ -111,7 +117,7 @@ function CreateGroupForm() {
 
       {failure !== null && <p class="failure">{failure}</p>}
 
-      <button class="action" type="submit" disabled={pending}>
+      <button class="button button-primary button-wide" type="submit" disabled={pending}>
         Create group
       </button>
     </form>

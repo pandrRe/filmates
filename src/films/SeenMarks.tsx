@@ -1,13 +1,13 @@
 import type { Id } from "../../convex/_generated/dataModel";
 import type { Member } from "../../convex/users";
 
-export function SeenDots(props: { members: Array<Member>; seenBy: Array<Id<"users">> }) {
+export function SeenMarks(props: { members: Array<Member>; seenBy: Array<Id<"users">> }) {
   return (
-    <span class="dots">
+    <span class="marks">
       {props.members.map((member) => (
         <span
           key={member.id}
-          class={props.seenBy.includes(member.id) ? "dot dot-seen" : "dot"}
+          class={props.seenBy.includes(member.id) ? "mark mark-seen" : "mark"}
           title={member.name}
         />
       ))}

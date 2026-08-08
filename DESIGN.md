@@ -1,11 +1,11 @@
 # RFD 001 — Filmates
 
-| Field | Value |
-|---|---|
-| State | draft |
-| Authors | pandrre |
-| Date | 2026-08-07 |
-| Format | [Design Docs at Google](https://www.industrialempathy.com/posts/design-docs-at-google/), header per [Oxide RFD](https://rfd.shared.oxide.computer/rfd/0001) |
+| Field   | Value                                                                                                                                                       |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State   | draft                                                                                                                                                       |
+| Authors | pandrre                                                                                                                                                     |
+| Date    | 2026-08-07                                                                                                                                                  |
+| Format  | [Design Docs at Google](https://www.industrialempathy.com/posts/design-docs-at-google/), header per [Oxide RFD](https://rfd.shared.oxide.computer/rfd/0001) |
 
 ## Summary
 
@@ -63,24 +63,37 @@ Groups of friends collect film ideas in chat threads. The ideas get lost. There 
 A single ranked list:
 
 ```
-┌──────────────────────────────────────────┐
-│ FILMATES        ⌕ search        [group ▾]│
-├──────────────────────────────────────────┤
-│ ▲ 6  ┌────┐  HEAT                        │
-│ ▼    │post│  1995 · 170 MIN · MANN       │
-│      └────┘  ●●●○○                       │
-├──────────────────────────────────────────┤
-│ ▲ 4  ┌────┐  LA HAINE                    │
-│ ▼    │post│  1995 · 98 MIN · KASSOVITZ   │
-│      └────┘  ●●○○○                       │
-└──────────────────────────────────────────┘
+ FILMATES
+ ─────────────────────────────────────────
+
+ SUNDAY SCREENING
+ 3 / 8 MEMBERS
+
+ [ Search films                          ]
+ [   ALL   |  UNSEEN BY ME  | SEEN BY ALL ]
+
+ INDEX ───────────────────────────────────
+ 01 ──────────────────────────────────────
+ ┌────┐  HEAT                      ┌────┐
+ │post│  1995 · 170 MIN · MANN     │  ▲ │
+ │    │                            ├────┤
+ │    │                            │  6 │
+ │    │                            ├────┤
+ └────┘  ■ ■ □                     │  ▼ │
+                                   └────┘
+ 02 ──────────────────────────────────────
+ ┌────┐  LA HAINE                  ┌────┐
+ │post│  1995 · 98 MIN · KASSOVITZ │  ▲ │
+ ...
+ ─────────────────────────────────────────
+ [             ADD FILM                   ]
 ```
 
 - Sort: score descending. Tie-break: oldest post first.
-- The dot row shows one icon per member. Green = seen. Grey = not seen. Tap the row to see names.
+- The mark row shows one square per member. `--mark` = seen, `--edge` = not seen. Open the film to read the names.
 - Voting is the only action on a row. Marking seen lives in the bottom sheet: a second button on the row costs the width that keeps the specification line on one line, and seen is a rarer act than voting.
-- Filters: `All · Unseen by me · Seen by all`. "Seen by all" is the watch-next shortlist in reverse: it shows what the group can retire.
-- The search field filters the group list by title as the user types, best match first. The same field offers "Search the movie database →" as the last result row, which jumps to the add-film flow.
+- Filters: `All · Unseen by me · Seen by all`, as a segmented control. "Seen by all" is the watch-next shortlist in reverse: it shows what the group can retire.
+- The search field filters the group list by title as the user types, best match first. When the field is not empty, a `SEARCH THE FILM DATABASE` button appears below the results and jumps to the add-film flow.
 
 ## System design
 
@@ -127,10 +140,10 @@ Convex has no official Octane binding. The fix is small: Convex ships a framewor
 
 Two different problems, two different tools:
 
-| Scope | Data size | Tool |
-|---|---|---|
+| Scope                 | Data size             | Tool                                                                    |
+| --------------------- | --------------------- | ----------------------------------------------------------------------- |
 | Inside the group list | ≤ a few hundred films | Client-side word match on the title, ranked by relevance. Zero latency. |
-| Movie database | Millions of films | TMDB `/search/movie` via Convex action, debounced 200 ms, cached. |
+| Movie database        | Millions of films     | TMDB `/search/movie` via Convex action, debounced 200 ms, cached.       |
 
 The group filter splits the query on whitespace and keeps a film only when every word is a substring of its title. Order within the matches is by relevance — a word at the title start scores 100, at a word start 50, anywhere else 10 — and vote rank breaks ties. An empty query scores every film 0, so the list falls back to pure vote rank.
 
@@ -144,12 +157,12 @@ The architecture is type-safe, data-oriented, and functional. Data is plain seri
 
 Validation follows **parse, don't validate**. Raw data never crosses a boundary; each boundary parses input into a domain type once, and everything inside trusts the types.
 
-| Boundary | Validator |
-|---|---|
-| Database schema, mutation/query args | Convex `v` (required by Convex, generates types) |
-| TMDB responses (inside actions) | **Valibot** schema → domain `Film` type |
+| Boundary                                | Validator                                             |
+| --------------------------------------- | ----------------------------------------------------- |
+| Database schema, mutation/query args    | Convex `v` (required by Convex, generates types)      |
+| TMDB responses (inside actions)         | **Valibot** schema → domain `Film` type               |
 | Route search params (filters, `?film=`) | Valibot via TanStack Router's Standard Schema support |
-| Invite tokens, env vars | Valibot at startup / entry |
+| Invite tokens, env vars                 | Valibot at startup / entry                            |
 
 Valibot over TypeBox: TanStack Router validates search params through Standard Schema, which Valibot implements natively; and Valibot is modular, so only the schemas used are bundled — this matters for the 80 kB budget. A failed parse throws; there are no silent fallbacks or default-filled records.
 
@@ -198,86 +211,112 @@ An invite is issued per group and reused while it is live. It expires 7 days aft
 
 ## Visual design
 
-Direction in one line: **a Swiss industrial index of films.** Letterboxd supplies the dark ground and the density. Porto Rocha supplies the attitude: typographic confidence, utilitarian structure, work that "has a presence" ([It's Nice That](https://www.itsnicethat.com/articles/porto-rocha-museu-nacional-identity-graphic-design-030720)). The International Typographic Style supplies the rules: grid, Helvetica, flush left, no decoration.
+Direction in one line: **a Japanese instrument panel for films.** Black is not a background, it is the material. Everything on top of it is either a hairline, a rule of Helvetica, a poster, or a control with a real edge.
 
 ### Reference set
 
 Pin these three and nothing else:
 
-1. **[portorocha.com](https://www.portorocha.com/)** — the studio's own site is the closest reference to what Filmates should feel like: a grid-based index list, uppercase micro-labels, minimal tags, declarative one-line descriptions ("Winning back audience trust"), imagery doing all the color work. Filmates' main view is exactly this pattern — an index of films instead of an index of projects.
-2. **Porto Rocha for [live](https://the-brandidentity.com/project/porto-rocha-embrace-times-new-roman-pared-back-identity-post-digital-agency-live)** — proof of the pared-back move: one system typeface, stripped ornament, tone carried entirely by typesetting. We do the same move with Helvetica instead of Times.
-3. **Letterboxd** — the `#14181c` dark ground, the poster-forward density, the green. What we take is the surface; what we drop is the rounded-card social-app chrome.
+1. **[Takram](https://www.takram.com/)** — the governing reference. Rigorous editorial structure, an almost total absence of ornament, monochrome surfaces where the only "color" is the work being shown, and micro-labels used as navigation. Filmates borrows the discipline: a page is a document with sections, not a feed with widgets.
+2. **Kenya Hara / MUJI** — reduction as the design act. Nothing is added to make a thing look designed; everything not carrying information is removed. This is the test applied to every element: delete it and see whether meaning is lost.
+3. **Swiss industrial control panels** (Müller-Brockmann's grid applied to machinery) — a control is a bordered cell with a legible legend, and pressing it visibly changes its state. This is where the buttons come from.
 
-Counter-reference: Porto Rocha's [Tudum for Netflix Brazil](https://the-brandidentity.com/project/porto-rocha-devise-maximalist-vibrant-unpredictable-identity-netflix-brazils-tudum) shows the studio's maximalist register. Filmates does **not** go there. We take the rigor, not the noise.
+Counter-reference: **Letterboxd.** Filmates is deliberately not it. No `#14181c` blue-black, no signature green, no rounded cards, no social chrome, no poster-wall density. The earlier palette copied Letterboxd's exact hexes and the result read as a cheap clone; that palette is retired.
 
 ### Typography
 
 Helvetica, and only Helvetica.
 
 ```css
---font: "Helvetica Now Text", "Neue Haas Grotesk",
-        "Helvetica Neue", Helvetica, Arial, sans-serif;
+--font: "Helvetica Now Text", "Neue Haas Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
 ```
 
 - If licensing allows, buy **Neue Haas Grotesk** (Helvetica's origin cut, better at display sizes) or **Helvetica Now**. If not, system `Helvetica Neue` covers every Apple device — most of a friends group's phones — and Arial catches the rest. Zero webfont bytes in the fallback case; this also serves the performance budget.
-- **Display (film titles):** uppercase, bold (700), tight tracking (−2%), size `clamp(20px, 5vw, 28px)` in the list. Titles are the interface.
-- **Text (metadata, UI):** regular (400/500), sentence case, 13–15 px, tracking normal.
-- **Micro-labels (section heads, filters):** 11 px, uppercase, +8% tracking, grey — the Porto Rocha index label: `UNSEEN BY ME`, `SEEN BY ALL`.
-- **Numbers:** tabular lining figures everywhere (`font-variant-numeric: tabular-nums`). Scores and rank numbers must not jitter when they change.
+  Four sizes, and the jumps between them are large. Hierarchy comes from the gap, not from a ramp of near-identical steps.
+
+| Role      | Spec                                                 | Used for                                                |
+| --------- | ---------------------------------------------------- | ------------------------------------------------------- |
+| Display   | `clamp(24px, 7vw, 34px)` / 700 / −3.5% / uppercase   | Group name, page headings                               |
+| Film name | `clamp(22px, 6.4vw, 30px)` / 700 / −3.5% / uppercase | Film titles in the index and the sheet                  |
+| Title     | 19 px / 700 / −2% / uppercase                        | Group names in a list                                   |
+| Body      | 15 px / 400                                          | Sentences, member names                                 |
+| Label     | 10 px / 600 / +14% / uppercase / grey                | Section heads, spec lines, button legends, rank numbers |
+
+- The wordmark is the one exception: 11 px / 700 / **+26%** tracking. Letterspacing, not size, marks it as an identity rather than a heading.
+- **Numbers:** tabular lining figures on scores and ranks (`font-variant-numeric: tabular-nums`). They must not jitter when they change.
 - No second family. No italic. Weight and size carry all hierarchy.
 
 ### Grid and structure
 
 Swiss means the grid is real, not implied.
 
-- Base unit **4 px**; all spacing is a multiple of it.
-- Phone: 4-column grid, 16 px margins. ≥ 768 px: 12 columns, max content width 1100 px, the list keeps a single column but gains a wider poster and a visible rank column.
-- **Hairlines, not cards.** 1 px rules in `#2c3440` separate rows. No border radius anywhere except the seen dots and avatars (full circle). No shadows, ever.
-- **Flush left, ragged right.** Nothing is centered — not titles, not empty states, not modals.
-- **The rank is typography.** Each row leads with its index number — `01`, `02`, `03` — set in the display weight, grey, like a Müller-Brockmann program listing. The score sits with the vote arrows. When ranks change, the numbers stay fixed to position and the films move through them.
+- Base unit **4 px**; spacing comes from the scale 4 / 8 / 12 / 16 / 20 / 24 / 32 only.
+- Page margin **20 px**, content capped at **560 px** and left-aligned in the viewport. The phone layout is the layout; wide screens get the same single column, not a second design.
+- **`border-radius: 0` is set in the reset and never overridden.** Nothing in the app is round — not the buttons, not the inputs, not the seen marks. No shadows, ever.
+- **Hairlines, not cards.** `--rule` separates rows and closes section heads. `--edge` is reserved for the borders of things you can touch. The two greys are what tells structure apart from control.
+- **Sections are labelled and ruled.** Each block opens with a micro-label and a 1 px rule running from it to the right margin: `INDEX ─────`, `MEMBERS ─────`, `INVITE ─────`. This is the whole navigation system; there is no tab bar.
+- **Flush left, ragged right.** Nothing is centered except the legend inside a button.
+- **The rank is a leader line.** Each row opens with its index number and a rule running the full width beneath it. The films move through fixed numbers when a vote reorders the list.
 
 ```
- 01  ▲ 6  ┌────┐  HEAT
-     ▼    │post│  1995 · 170 MIN · MANN
-          └────┘  ●●●○○
- ─────────────────────────────────────────
- 02  ▲ 4  ┌────┐  LA HAINE
-     ▼    │post│  1995 · 98 MIN · KASSOVITZ
-          └────┘  ●●○○○
+ 01 ─────────────────────────────────────
+ ┌────┐  HEAT                      ┌────┐
+ │post│  1995 · 170 MIN · MANN     │  ▲ │
+ │    │                            ├────┤
+ │    │                            │  6 │
+ │    │                            ├────┤
+ └────┘  ■ ■ □ □                   │  ▼ │
+                                   └────┘
+ 02 ─────────────────────────────────────
 ```
 
 - Metadata reads as a **spec line**: `1995 · 170 MIN · MANN` — uppercase, grey, interpunct-separated, like a plate on industrial equipment. One line, always the same fields, same order.
+- The seen marks sit on the **poster baseline**, not floating in the middle of the text column. The title block is at least as tall as the poster so this alignment always holds.
 
 ### Posters
 
-Posters are the only images in the app and its only source of color. The palette above stays six tokens *because* every row carries a poster.
+Posters are the only images in the app and its only source of color. The palette above stays six tokens _because_ every row carries a poster.
 
-- **In the list:** every row shows a poster at strict 2:3, displayed 48 × 72 px (56 × 84 px ≥ 768 px), between the vote column and the title block. Hard corners. This is the Letterboxd half of the identity — a type-only list would read as a spreadsheet.
-- **Source sizes:** TMDB `w92` for list rows, `w342` in the bottom sheet, `w500` only on ≥ 768 px detail. Never ship a larger image than the displayed size × DPR.
+- **In the list:** every row shows a poster at strict 2:3, displayed 64 × 96 px, leading the row. Hard corners. Without it a type-only list reads as a spreadsheet.
+- **Source sizes:** TMDB `w154` for list rows (64 px × 2 DPR), `w342` in the bottom sheet (96 px × 2 DPR). Never ship a larger image than the displayed size × DPR.
 - **Loading:** `loading="lazy"`, explicit `width`/`height` so rows never shift. Placeholder is a flat `--rule` rectangle — no shimmer, no blur-up.
 - **Missing poster** (rare in TMDB): the flat rectangle stays, with the film's initial letter set in the display type, grey. No generic film-reel icon.
 - **No treatment:** no rounded corners, no overlay gradients, no text on top of posters, no hover zoom. The poster is a document, not a decoration.
-- **Optional second view, v1.1:** a poster-grid mode for the same ranked list (rank number set into the top-left corner of each poster, dot row below). List stays the default.
+- **Optional second view, v1.1:** a poster-grid mode for the same ranked list (rank number set into the top-left corner of each poster, mark row below). List stays the default.
 
 ### Color
 
-| Token | Value | Use |
-|---|---|---|
-| `--ground` | `#14181c` | Background (Letterboxd tone) |
-| `--ink` | `#eaf0f4` | Primary text |
-| `--muted` | `#8899a6` | Metadata, labels, rank numbers, unseen dots |
-| `--rule` | `#2c3440` | Hairlines |
-| `--seen` | `#00e054` | Seen dots, active upvote, positive score |
-| `--down` | `#8899a6` | Active downvote — grey, not red; a downvote is a preference, not an alarm |
+| Token      | Value     | Use                                                         |
+| ---------- | --------- | ----------------------------------------------------------- |
+| `--ground` | `#000000` | The page. True black, not a blue-black                      |
+| `--raised` | `#0a0a0a` | The bottom sheet — the one surface that sits above the page |
+| `--rule`   | `#1f1f1f` | Hairlines between rows and after section labels             |
+| `--edge`   | `#383838` | Borders of controls, and inactive marks and arrows          |
+| `--ink`    | `#ffffff` | Primary text, and the fill of a pressed or active control   |
+| `--dim`    | `#8a8a8a` | Labels, spec lines, rank numbers, secondary text            |
+| `--mark`   | `#e60012` | Seen marks and the seen button. Nothing else, anywhere      |
 
-Six tokens, dark only. Posters are the only images and the only saturation. UI never competes with them.
+Seven tokens. The greys are **neutral** — equal parts, no blue cast. Six of the seven are achromatic; `--mark` is the single chromatic value in the app, JIS safety red, and it is spent entirely on one meaning: this film has been seen. Posters supply every other colour on screen.
+
+### Controls
+
+Every interactive thing has a visible edge. This is the rule the old design broke — bare grey text was doing the job of a button.
+
+- **`.button`** — 48 px tall, 1 px `--edge` border, 10 px uppercase legend. Pressing it **inverts**: white fill, black legend. Inversion is the entire feedback mechanism; there is no hover lift, no shadow, no ripple.
+- **`.button-primary`** — the same control already inverted. One per screen, and it is the screen's single most important action: `ADD FILM`, `CREATE GROUP`, `JOIN GROUP`, `CREATE ACCOUNT`.
+- **`.button-marked`** — filled `--mark`. Used only for `SEEN BY ME`.
+- **Segmented control** — the three filters share one bordered box split by hairlines. The active segment is inverted. A filter is a switch, so it looks like a switch.
+- **Vote block** — a single bordered instrument, 44 px wide: up cell, score cell, down cell, divided by hairlines. The active direction inverts. Two loose glyphs floating on the background were not a control.
+- **Inputs** — 48 px tall, fully bordered in `--edge`, border goes `--ink` on focus. Their label sits above in micro-type.
+- **Focus** — a 1 px `--ink` outline at 2 px offset on `:focus-visible`. Never removed.
 
 ### Detail rules (industrial finish)
 
-- **Words over icons.** Filters are text (`ALL / UNSEEN BY ME / SEEN BY ALL`), not glyphs. The only glyphs are the vote arrows `▲▼` (typographic, not custom icons), the seen dots, and the search `⌕`.
-- **Declarative microcopy**, Porto Rocha register: short, exact, no exclamation marks, no emoji. Empty group: `No films yet. Add the first.` Full group: `This group is full.`
-- **State is color, not decoration.** An active upvote turns the arrow green. A seen dot turns green. Nothing gets a badge, a pill, or a glow.
-- **Posters are rectangles.** 2:3, hard corners, no overlay gradients. The dot row and score never sit on top of the poster.
+- **Words over icons.** Every control is legible text: `ALL / UNSEEN BY ME / SEEN BY ALL`, `ADD FILM`, `MARK SEEN`, `REVOKE`. The only glyphs in the app are the vote arrows `▲▼`. There is no search icon — the field says `Search films`.
+- **Declarative microcopy:** short, exact, no exclamation marks, no emoji. Empty group: `No films yet. Add the first.` Full group: `This group is full.`
+- **State is inversion, not decoration.** An active control swaps its foreground and background. Nothing gets a badge, a pill, or a glow.
+- **Seen marks are squares**, 7 px, `--edge` when unseen and `--mark` when seen. One per member. They are display, never a target.
+- **Posters are rectangles.** 2:3, hard corners, no overlay gradients. Marks and scores never sit on top of a poster.
 
 ### Motion
 
@@ -288,19 +327,22 @@ Mechanical, not organic. Motion confirms cause and effect; it never entertains.
 
 ### Phone ergonomics
 
-- One column. Vote arrows on the left edge, inside thumb reach; the dot row on the right is display, not a target.
-- Tap targets ≥ 44 px even where the visual mark is smaller (arrows get invisible padding).
-- Film detail opens as a bottom sheet, not a route change; the URL still updates (`/g/$groupId?film=…`) so it survives share and refresh. The sheet holds the title, the specification line, the `w342` poster, the vote column, the seen toggle, and the names of the members who have seen the film.
+The phone layout is the only layout. It is designed at 375 px and checked there before anything else.
+
+- One column. Buttons are 48 px, other targets never below 44 px.
+- **The primary action lives in a fixed bar at the bottom of the viewport**, inside the thumb arc, and the page reserves padding so it never covers the last row. Only the group page has one; it holds `ADD FILM`.
+- The vote block sits on the right edge of a row, opposite the poster. It is reached by the thumb without covering the title.
+- Film detail opens as a bottom sheet, not a route change; the URL still updates (`/g/$groupId?film=…`) so it survives share and refresh. The sheet holds the `w342` poster, the title, the specification line, the vote block, the seen button, the names of the members who have seen the film, and a real `CLOSE` button.
 
 ## Performance budget
 
-| Metric | Target | Measured |
-|---|---|---|
-| JS shipped (main route, gzip) | < 105 kB | 99.85 kB |
-| Deferred JS (film sheet, gzip) | off the critical path | 20.57 kB |
-| LCP, 4G phone | < 1.5 s | |
-| Vote/seen tap → visible change | < 50 ms (optimistic) | |
-| Update propagation to other members | < 500 ms | |
+| Metric                              | Target                | Measured |
+| ----------------------------------- | --------------------- | -------- |
+| JS shipped (main route, gzip)       | < 105 kB              | 99.85 kB |
+| Deferred JS (film sheet, gzip)      | off the critical path | 20.57 kB |
+| LCP, 4G phone                       | < 1.5 s               |          |
+| Vote/seen tap → visible change      | < 50 ms (optimistic)  |          |
+| Update propagation to other members | < 500 ms              |          |
 
 The main-route target was 80 kB until M7 measured the floor. Sourcemap byte attribution of the production build gives, in raw bytes before app code: `octane/dist` 133 kB, `convex/dist` 65 kB, `@tanstack/router-core` 55 kB, `@octanejs/tanstack-router` 23 kB, `valibot/dist` 5 kB, `@tanstack/history` 4 kB, `@tanstack/store` 4 kB — about 89 kB gzip of vendor code that no amount of app-side work removes. Development branches are confirmed stripped. 80 kB was not reachable with this stack; 105 kB is the measured floor plus room for one more feature.
 

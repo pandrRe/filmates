@@ -34,27 +34,26 @@ export function FilmSheet(props: FilmSheetProps) {
       <Dialog.Portal>
         <Dialog.Backdrop class="sheet-backdrop" />
         <Dialog.Popup class="sheet">
-          <div class="sheet-title">
-            <Dialog.Title class="film-name">{props.groupFilm.film.title}</Dialog.Title>
-            <p class="label">{filmSpecification(props.groupFilm.film)}</p>
-          </div>
-
           <div class="sheet-head">
+            <FilmPoster
+              size="sheet"
+              title={props.groupFilm.film.title}
+              posterPath={props.groupFilm.film.posterPath}
+            />
+            <div class="sheet-text">
+              <Dialog.Title class="film-name">{props.groupFilm.film.title}</Dialog.Title>
+              <p class="label">{filmSpecification(props.groupFilm.film)}</p>
+            </div>
             <VoteColumn
               title={props.groupFilm.film.title}
               vote={props.vote}
               score={props.score}
               onVote={props.onVote}
             />
-            <FilmPoster
-              size="sheet"
-              title={props.groupFilm.film.title}
-              posterPath={props.groupFilm.film.posterPath}
-            />
           </div>
 
           <button
-            class="action seen-toggle"
+            class={props.seen ? "button button-wide button-marked" : "button button-wide"}
             type="button"
             aria-label={`Seen ${props.groupFilm.film.title}`}
             aria-pressed={props.seen}
@@ -63,8 +62,10 @@ export function FilmSheet(props: FilmSheetProps) {
             {props.seen ? "Seen by me" : "Mark seen"}
           </button>
 
-          <section class="panel">
-            <p class="label">Seen by</p>
+          <section class="section">
+            <p class="section-head">
+              <span class="label">Seen by</span>
+            </p>
             {seenNames.length === 0 ? (
               <p class="muted">Nobody yet.</p>
             ) : (
@@ -72,7 +73,7 @@ export function FilmSheet(props: FilmSheetProps) {
             )}
           </section>
 
-          <Dialog.Close class="label sheet-close">Close</Dialog.Close>
+          <Dialog.Close class="button button-wide">Close</Dialog.Close>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

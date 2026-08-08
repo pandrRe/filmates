@@ -11,7 +11,7 @@ test("a member invites a friend into a group", async ({ browser }) => {
   await owner.getByRole("button", { name: "Create group" }).click();
 
   await expect(owner.getByRole("heading", { name: "Sunday Screening" })).toBeVisible();
-  await expect(owner.getByText("Members 1 / 4")).toBeVisible();
+  await expect(owner.getByText("1 / 4 members")).toBeVisible();
 
   await owner.getByRole("button", { name: "Copy invite link" }).click();
   const inviteLink = await owner.locator(".invite-link").textContent();
@@ -20,12 +20,12 @@ test("a member invites a friend into a group", async ({ browser }) => {
   const friend = await browser.newPage();
   await signUp(friend, "Friend Person", uniqueEmail("friend"));
   await friend.goto(inviteLink ?? "");
-  await expect(friend.getByText("Join Sunday Screening")).toBeVisible();
+  await expect(friend.getByRole("heading", { name: "Sunday Screening" })).toBeVisible();
   await friend.getByRole("button", { name: "Join group" }).click();
 
-  await expect(friend.getByRole("heading", { name: "Sunday Screening" })).toBeVisible();
-  await expect(friend.getByText("Members 2 / 4")).toBeVisible();
-  await expect(owner.getByText("Members 2 / 4")).toBeVisible();
+  await expect(friend.getByRole("link", { name: "Add film" })).toBeVisible();
+  await expect(friend.getByText("2 / 4 members")).toBeVisible();
+  await expect(owner.getByText("2 / 4 members")).toBeVisible();
 
   await owner.close();
   await friend.close();
