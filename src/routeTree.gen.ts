@@ -11,8 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as GGroupIdRouteImport } from './routes/g.$groupId'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
+import { Route as GGroupIdIndexRouteImport } from './routes/g.$groupId.index'
+import { Route as GGroupIdAddRouteImport } from './routes/g.$groupId.add'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,49 +25,65 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GGroupIdRoute = GGroupIdRouteImport.update({
-  id: '/g/$groupId',
-  path: '/g/$groupId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
   id: '/join/$token',
   path: '/join/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GGroupIdIndexRoute = GGroupIdIndexRouteImport.update({
+  id: '/g/$groupId/',
+  path: '/g/$groupId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GGroupIdAddRoute = GGroupIdAddRouteImport.update({
+  id: '/g/$groupId/add',
+  path: '/g/$groupId/add',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
-  '/g/$groupId': typeof GGroupIdRoute
   '/join/$token': typeof JoinTokenRoute
+  '/g/$groupId/add': typeof GGroupIdAddRoute
+  '/g/$groupId/': typeof GGroupIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
-  '/g/$groupId': typeof GGroupIdRoute
   '/join/$token': typeof JoinTokenRoute
+  '/g/$groupId/add': typeof GGroupIdAddRoute
+  '/g/$groupId': typeof GGroupIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
-  '/g/$groupId': typeof GGroupIdRoute
   '/join/$token': typeof JoinTokenRoute
+  '/g/$groupId/add': typeof GGroupIdAddRoute
+  '/g/$groupId/': typeof GGroupIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/g/$groupId' | '/join/$token'
+  fullPaths:
+    '/' | '/sign-in' | '/join/$token' | '/g/$groupId/add' | '/g/$groupId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/g/$groupId' | '/join/$token'
-  id: '__root__' | '/' | '/sign-in' | '/g/$groupId' | '/join/$token'
+  to: '/' | '/sign-in' | '/join/$token' | '/g/$groupId/add' | '/g/$groupId'
+  id:
+    | '__root__'
+    | '/'
+    | '/sign-in'
+    | '/join/$token'
+    | '/g/$groupId/add'
+    | '/g/$groupId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SignInRoute: typeof SignInRoute
-  GGroupIdRoute: typeof GGroupIdRoute
   JoinTokenRoute: typeof JoinTokenRoute
+  GGroupIdAddRoute: typeof GGroupIdAddRoute
+  GGroupIdIndexRoute: typeof GGroupIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -85,18 +102,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/g/$groupId': {
-      id: '/g/$groupId'
-      path: '/g/$groupId'
-      fullPath: '/g/$groupId'
-      preLoaderRoute: typeof GGroupIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/join/$token': {
       id: '/join/$token'
       path: '/join/$token'
       fullPath: '/join/$token'
       preLoaderRoute: typeof JoinTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/g/$groupId/': {
+      id: '/g/$groupId/'
+      path: '/g/$groupId'
+      fullPath: '/g/$groupId/'
+      preLoaderRoute: typeof GGroupIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/g/$groupId/add': {
+      id: '/g/$groupId/add'
+      path: '/g/$groupId/add'
+      fullPath: '/g/$groupId/add'
+      preLoaderRoute: typeof GGroupIdAddRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -105,8 +129,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SignInRoute: SignInRoute,
-  GGroupIdRoute: GGroupIdRoute,
   JoinTokenRoute: JoinTokenRoute,
+  GGroupIdAddRoute: GGroupIdAddRoute,
+  GGroupIdIndexRoute: GGroupIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

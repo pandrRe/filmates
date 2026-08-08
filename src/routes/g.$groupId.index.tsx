@@ -6,8 +6,10 @@ import { readSession } from "../authentication/session";
 import { convexClient } from "../convex/client";
 import { useLiveQuery } from "../convex/useLiveQuery";
 import { describeError } from "../describeError";
+import { FilmPoster } from "../films/FilmPoster";
+import { filmSpecification } from "../films/specification";
 
-export const Route = createFileRoute("/g/$groupId")({
+export const Route = createFileRoute("/g/$groupId/")({
   beforeLoad: ({ params }) => {
     if (readSession().status === "signedOut") {
       throw redirect({ to: "/sign-in", search: { next: `/g/${params.groupId}` } });
@@ -26,6 +28,9 @@ function GroupPage() {
         <Link class="label" to="/">
           Groups
         </Link>
+        <Link class="label" to="/g/$groupId/add" params={{ groupId }}>
+          Add film
+        </Link>
       </header>
 
       {group.status === "loading" && <p class="muted">Loading</p>}
@@ -33,21 +38,54 @@ function GroupPage() {
       {group.status === "ready" && (
         <>
           <h1 class="wordmark">{group.value.name}</h1>
-          <p class="label">
-            Members {group.value.memberCount} / {group.value.memberLimit}
-          </p>
-          <ul class="rows">
-            {group.value.members.map((member) => (
-              <li class="row" key={member.id}>
-                <span>{member.name}</span>
-                {member.id === group.value.ownerId && <span class="label">Owner</span>}
-              </li>
-            ))}
-          </ul>
+          <FilmList groupId={groupId} />
+          <section class="panel">
+            <p class="label">
+              Members {group.value.memberCount} / {group.value.memberLimit}
+            </p>
+            <ul class="rows">
+              {group.value.members.map((member) => (
+                <li class="row" key={member.id}>
+                  <span>{member.name}</span>
+                  {member.id === group.value.ownerId && <span class="label">Owner</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
           <InvitePanel groupId={group.value.id} />
         </>
       )}
     </main>
+  );
+}
+
+function FilmList(props: { groupId: string }) {
+  const films = useLiveQuery(api.films.listForGroup, { groupId: props.groupId });
+
+  if (films.status === "loading") {
+    return <p class="muted">Loading</p>;
+  }
+  if (films.status === "failed") {
+    return <p class="failure">{films.message}</p>;
+  }
+  if (films.value.length === 0) {
+    return <p class="muted">No films yet. Add the first.</p>;
+  }
+
+  return (
+    <ol class="rows">
+      {films.value.map((groupFilm, index) => (
+        <li class="film-row" key={groupFilm.id}>
+          <span class="rank">{index + 1}</span>
+          <FilmPoster title={groupFilm.film.title} posterPath={groupFilm.film.posterPath} />
+          <span class="film-title">
+            <span>{groupFilm.film.title}</span>
+            <span class="label">{filmSpecification(groupFilm.film)}</span>
+          </span>
+          <span class="score">{groupFilm.score}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

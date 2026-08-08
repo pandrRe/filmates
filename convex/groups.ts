@@ -3,7 +3,7 @@ import * as valibot from "valibot";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { requireUserId } from "./authentication";
-import { listMemberships, requireMemberId } from "./memberships";
+import { listMemberships, requireMembership } from "./memberships";
 import { readMember, type Member } from "./users";
 
 const GroupName = valibot.pipe(
@@ -76,11 +76,7 @@ export const listForCurrentUser = query({
 export const get = query({
   args: { groupId: v.string() },
   handler: async (ctx, args): Promise<GroupDetail> => {
-    const groupId = ctx.db.normalizeId("groups", args.groupId);
-    if (groupId === null) {
-      throw new Error(`${args.groupId} is not a group`);
-    }
-    await requireMemberId(ctx, groupId);
+    const { groupId } = await requireMembership(ctx, args.groupId);
     const group = await ctx.db.get(groupId);
     if (group === null) {
       throw new Error(`group ${groupId} does not exist`);

@@ -101,6 +101,51 @@ img {
   border-bottom: 1px solid var(--rule);
 }
 
+.film-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+}
+
+.film-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.rank {
+  width: 20px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  font-variant-numeric: tabular-nums;
+}
+
+.poster {
+  width: 48px;
+  height: 72px;
+  flex: none;
+  background: var(--rule);
+}
+
+.poster-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .form {
   display: flex;
   flex-direction: column;

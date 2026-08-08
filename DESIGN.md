@@ -172,6 +172,7 @@ memberships  { groupId, userId }                    // index: by_group, by_user,
 invites      { groupId, token, expiresAt, revoked } // index: by_token, by_group
 films        { tmdbId, title, year, runtime,
                director, posterPath }               // index: by_tmdbId (global cache)
+                                                    // year, runtime, director, posterPath: null when TMDB has none
 groupFilms   { groupId, filmId, postedBy,
                score }                              // index: by_group_score, unique (groupId, filmId)
 votes        { groupFilmId, userId, value: 1 | -1 } // index: by_groupFilm, unique (groupFilmId, userId)
@@ -179,6 +180,8 @@ seenMarks    { groupFilmId, userId }                // index: by_groupFilm, uniq
 ```
 
 Post time comes from Convex's built-in `_creationTime`; no table stores its own timestamp.
+
+TMDB does not have a year, a runtime, or a credited director for every film. Those columns are nullable, and the spec line prints only the parts that exist. A missing value is never filled with a placeholder.
 
 `authTables` also brings the session, account, and verification tables that Convex Auth owns. Every field on `users` is optional there, so a display name is required at the sign-up boundary and parsed again on every read: a user row without a name is an error, never a placeholder.
 

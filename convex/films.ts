@@ -5,7 +5,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireUserId } from "./authentication";
-import { requireMemberId } from "./memberships";
+import { requireMemberId, requireMembership } from "./memberships";
 import { fetchFilm, searchFilms, type Film, type FilmSearchResult } from "./tmdb";
 
 const CACHE_LIFETIME_MILLISECONDS = 24 * 60 * 60 * 1000;
@@ -154,23 +154,21 @@ export const search = action({
 });
 
 export const post = action({
-  args: { groupId: v.id("groups"), tmdbId: v.number() },
+  args: { groupId: v.string(), tmdbId: v.number() },
   handler: async (ctx, args): Promise<PostResult> => {
-    await ctx.runQuery(internal.memberships.currentMemberId, { groupId: args.groupId });
+    const { groupId } = await ctx.runQuery(internal.memberships.currentMembership, {
+      groupId: args.groupId,
+    });
     const known = await ctx.runQuery(internal.films.readFilmByTmdbId, { tmdbId: args.tmdbId });
     const film = known ?? (await fetchFilm(args.tmdbId));
-    return await ctx.runMutation(internal.films.writePost, { groupId: args.groupId, film });
+    return await ctx.runMutation(internal.films.writePost, { groupId, film });
   },
 });
 
 export const listForGroup = query({
   args: { groupId: v.string() },
   handler: async (ctx, args): Promise<Array<GroupFilm>> => {
-    const groupId = ctx.db.normalizeId("groups", args.groupId);
-    if (groupId === null) {
-      throw new Error(`${args.groupId} is not a group`);
-    }
-    await requireMemberId(ctx, groupId);
+    const { groupId } = await requireMembership(ctx, args.groupId);
     const groupFilms = await ctx.db
       .query("groupFilms")
       .withIndex("by_group_score", (q) => q.eq("groupId", groupId))
