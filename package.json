@@ -6,11 +6,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p convex",
     "lint": "oxlint",
     "format": "oxfmt"
   },
   "dependencies": {
+    "@auth/core": "^0.41.3",
+    "@convex-dev/auth": "^0.0.94",
     "@octanejs/base-ui": "^0.1.28",
     "@octanejs/tanstack-router": "^0.1.29",
     "convex": "^1.43.0",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@tanstack/router-plugin": "^1.168.27",
+    "@types/node": "^26.2.0",
     "lefthook": "^2.1.10",
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",

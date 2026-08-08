@@ -10,4 +10,4 @@ pre-commit:
       run: pnpm exec oxlint --fix {staged_files}
       stage_fixed: true
     3_typecheck:
-      run: pnpm exec tsc --noEmit
+      run: pnpm run typecheck
