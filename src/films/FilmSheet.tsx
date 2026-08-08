@@ -6,7 +6,7 @@ import { FilmPoster } from "./FilmPoster";
 import { filmSpecification } from "./specification";
 import { VoteColumn } from "./VoteColumn";
 
-export function FilmSheet(props: {
+export type FilmSheetProps = {
   groupFilm: GroupFilm;
   members: Array<Member>;
   vote: Vote;
@@ -15,7 +15,9 @@ export function FilmSheet(props: {
   onVote: (direction: "up" | "down") => void;
   onToggleSeen: () => void;
   onClose: () => void;
-}) {
+};
+
+export function FilmSheet(props: FilmSheetProps) {
   const seenNames = props.members
     .filter((member) => props.groupFilm.seenBy.includes(member.id))
     .map((member) => member.name);

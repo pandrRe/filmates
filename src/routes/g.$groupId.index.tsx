@@ -1,5 +1,5 @@
 import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "octane";
+import { useEffect, useRef, useState } from "octane";
 import * as valibot from "valibot";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -11,8 +11,8 @@ import { convexClient } from "../convex/client";
 import { useLiveQuery } from "../convex/useLiveQuery";
 import { describeError } from "../describeError";
 import { FilmPoster } from "../films/FilmPoster";
-import { FilmSheet } from "../films/FilmSheet";
 import { matchesQuery } from "../films/fuzzy";
+import { LazyFilmSheet, prefetchFilmSheet } from "../films/LazyFilmSheet";
 import { SeenDots } from "../films/SeenDots";
 import { filmSpecification } from "../films/specification";
 import { useRankReorder } from "../films/useRankReorder";
@@ -155,6 +155,11 @@ function FilmList(props: {
   const navigate = useNavigate({ from: Route.fullPath });
   const list = useRef<HTMLOListElement | null>(null);
 
+  useEffect(() => {
+    const idle = window.requestIdleCallback(prefetchFilmSheet);
+    return () => window.cancelIdleCallback(idle);
+  }, []);
+
   function showFilm(film: string | undefined) {
     void navigate({ search: (previous) => ({ ...previous, film }), replace: true });
   }
@@ -269,7 +274,7 @@ function FilmRow(props: {
         </span>
       </button>
       {props.open && (
-        <FilmSheet
+        <LazyFilmSheet
           groupFilm={props.groupFilm}
           members={props.members}
           vote={vote}
