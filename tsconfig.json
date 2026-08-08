@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "octane",
+    "paths": {
+      "@tanstack/react-router": ["./node_modules/@octanejs/tanstack-router/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "convex/**/*", "vite.config.ts"]
+}

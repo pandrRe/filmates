@@ -1,0 +1,13 @@
+pre-commit:
+  piped: true
+  commands:
+    1_format:
+      glob: "*.{ts,tsx,css,json}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+    2_lint:
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --fix {staged_files}
+      stage_fixed: true
+    3_typecheck:
+      run: pnpm exec tsc --noEmit
