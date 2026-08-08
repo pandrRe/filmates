@@ -39,7 +39,10 @@ One concept, one word — in types, tables, functions, UI copy, and docs.
 
 - **pnpm** is the only package manager. Never npm, yarn, or bun. Commit `pnpm-lock.yaml`; a `package-lock.json` or `yarn.lock` appearing is a bug.
 - **Latest stable everything.** When adding a dependency, install the latest stable version; do not copy versions from old examples. When a task touches an outdated dependency, flag it.
-- **TypeScript 7** (native compiler, GA July 2026) for typechecking and builds. Known gap until 7.1: tools that need the programmatic API (typescript-eslint, ts-morph) still require a side-by-side TS 6.x — pin it explicitly if one is added, and remove the pin when 7.1 lands.
+- **TypeScript 7** (native compiler, GA July 2026) for typechecking and builds. Known gap until 7.1: tools that need the programmatic API (ts-morph) still require a side-by-side TS 6.x — pin it explicitly if one is added, and remove the pin when 7.1 lands. oxlint does not have this problem; it is Rust and never touches the TS API.
+- **Vite** (latest) for dev and build, with the Octane compiler plugin.
+- **oxlint** for linting, **oxfmt** for formatting. No ESLint, no Prettier, no Biome. Config lives in `.oxlintrc.json`; do not disable rules inline without a reason in the PR/commit message.
+- **Pre-commit hooks via lefthook**: oxfmt then `oxlint --fix` on staged files, then `tsc --noEmit`. Never bypass with `--no-verify`; if a hook fails, fix the cause.
 
 ## Rules
 

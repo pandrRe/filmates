@@ -150,8 +150,10 @@ Valibot over TypeBox: TanStack Router validates search params through Standard S
 ### Tooling
 
 - **pnpm** for package management. One lockfile, strict node_modules.
-- **TypeScript 7** (native compiler, GA July 2026) in strict mode — 8–12× faster builds than 6.x. Until 7.1 ships the programmatic API, any tool that needs it (typescript-eslint) pins a side-by-side TS 6.x.
-- **Vite** for dev server and production build, with the Octane compiler plugin.
+- **TypeScript 7** (native compiler, GA July 2026) in strict mode — 8–12× faster builds than 6.x.
+- **Vite** (latest) for dev server and production build, with the Octane compiler plugin.
+- **oxlint + oxfmt** for lint and format — the Rust Oxc toolchain, ~30× faster than Prettier. Rust tools also sidestep TS 7's not-yet-stable programmatic API, which still blocks typescript-eslint.
+- **lefthook** pre-commit hooks: format staged files, `oxlint --fix`, `tsc --noEmit`. The hook keeps every commit clean; nothing unformatted or failing reaches history.
 - Policy: dependencies stay on latest stable. Few dependencies is the first rule; latest versions of the few is the second.
 
 ## Data model

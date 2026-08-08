@@ -12,6 +12,7 @@ Run this before you end a work session. Skip items whose area you did not touch.
 - [ ] Every external input (TMDB response, search params, invite token, env var) is parsed with Valibot before use. Nothing raw crosses a boundary.
 - [ ] Names come from the CLAUDE.md glossary. No "movie", no "watched", no `utils`/`helper`/`data`.
 - [ ] Work is committed with the `/commit` skill. Small, coherent commits — one idea per commit.
+- [ ] Pre-commit hooks ran on every commit. `--no-verify` was never used.
 
 ## Docs
 
